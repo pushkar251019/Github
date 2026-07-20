@@ -3,71 +3,171 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TaskFlow — Task Manager</title>
+  <title>Cadence — do the right thing at the right energy</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="app">
-    <aside class="sidebar">
+    <!-- Top bar -->
+    <header class="topbar">
       <div class="brand">
-        <span class="logo">✓</span>
-        <h1>TaskFlow</h1>
-      </div>
-
-      <nav class="filters" aria-label="Task filters">
-        <button class="filter-btn active" data-filter="all">
-          <span>Inbox</span><span class="count" data-count="all">0</span>
-        </button>
-        <button class="filter-btn" data-filter="today">
-          <span>Today</span><span class="count" data-count="today">0</span>
-        </button>
-        <button class="filter-btn" data-filter="active">
-          <span>Active</span><span class="count" data-count="active">0</span>
-        </button>
-        <button class="filter-btn" data-filter="completed">
-          <span>Completed</span><span class="count" data-count="completed">0</span>
-        </button>
-      </nav>
-
-      <div class="progress-block">
-        <div class="progress-label">
-          <span>Progress</span><span id="progress-pct">0%</span>
+        <span class="logo" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 13h3l3-8 4 16 3-8h5" />
+          </svg>
+        </span>
+        <div>
+          <h1>Cadence</h1>
+          <p class="tagline">do the right thing at the right energy</p>
         </div>
-        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
       </div>
-    </aside>
 
-    <main class="content">
-      <header class="content-head">
-        <h2 id="view-title">Inbox</h2>
-        <p id="view-sub" class="muted">Everything on your plate</p>
-      </header>
+      <div class="energy-picker" role="group" aria-label="Current energy level">
+        <span class="energy-label">Energy now</span>
+        <div class="energy-buttons">
+          <button class="energy-btn" data-energy="1" title="Low energy — drained, foggy">
+            <span class="dot"></span>Low
+          </button>
+          <button class="energy-btn" data-energy="2" title="Medium energy — steady">
+            <span class="dot"></span>Medium
+          </button>
+          <button class="energy-btn" data-energy="3" title="High energy — sharp, focused">
+            <span class="dot"></span>High
+          </button>
+        </div>
+      </div>
 
+      <div class="momentum-chip" title="Focus sessions completed today">
+        <span class="flame" aria-hidden="true">🔥</span>
+        <span id="streak-count">0</span><span class="chip-unit">day streak</span>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="tabs" aria-label="Views">
+      <button class="tab active" data-tab="now">Now</button>
+      <button class="tab" data-tab="tasks">Tasks<span class="tab-count" id="tab-count">0</span></button>
+      <button class="tab" data-tab="matrix">Matrix</button>
+      <button class="tab" data-tab="momentum">Momentum</button>
+    </nav>
+
+    <!-- NOW -->
+    <section class="panel active" id="panel-now">
+      <div class="now-grid">
+        <div class="recommend-card" id="recommend-card">
+          <div class="rc-eyebrow">Right now, do this</div>
+          <div id="rc-body">
+            <!-- filled by JS -->
+          </div>
+        </div>
+
+        <div class="focus-card">
+          <div class="focus-title">Focus session</div>
+          <div class="ring-wrap">
+            <svg class="ring" viewBox="0 0 220 220" width="220" height="220">
+              <circle class="ring-track" cx="110" cy="110" r="96" />
+              <circle class="ring-progress" id="ring-progress" cx="110" cy="110" r="96"
+                      transform="rotate(-90 110 110)" />
+            </svg>
+            <div class="ring-center">
+              <div class="ring-time" id="ring-time">25:00</div>
+              <div class="ring-sub" id="ring-sub">ready</div>
+            </div>
+          </div>
+          <div class="presets" role="group" aria-label="Session length">
+            <button class="preset" data-min="15">15m</button>
+            <button class="preset active" data-min="25">25m</button>
+            <button class="preset" data-min="50">50m</button>
+          </div>
+          <div class="focus-controls">
+            <button class="btn primary" id="timer-toggle">Start</button>
+            <button class="btn ghost" id="timer-reset">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="shortlist">
+        <div class="section-head">Up next for your energy</div>
+        <ul id="shortlist-list" class="shortlist-list"></ul>
+      </div>
+    </section>
+
+    <!-- TASKS -->
+    <section class="panel" id="panel-tasks">
       <form id="task-form" class="task-form" autocomplete="off">
-        <input
-          id="task-input"
-          class="task-input"
-          type="text"
-          placeholder="Add a task and press Enter…"
-          aria-label="Task title"
-          required
-        />
-        <select id="task-priority" class="task-priority" aria-label="Priority">
-          <option value="low">Low</option>
-          <option value="medium" selected>Medium</option>
-          <option value="high">High</option>
-        </select>
-        <input id="task-due" class="task-due" type="date" aria-label="Due date" />
-        <button type="submit" class="add-btn">Add</button>
+        <input id="task-input" class="task-input" type="text"
+               placeholder="What needs doing?" aria-label="Task title" required />
+        <div class="rating">
+          <label>Impact
+            <select id="task-impact" aria-label="Impact">
+              <option value="1">Low</option>
+              <option value="2" selected>Medium</option>
+              <option value="3">High</option>
+            </select>
+          </label>
+          <label>Effort
+            <select id="task-effort" aria-label="Effort">
+              <option value="1">Light</option>
+              <option value="2" selected>Moderate</option>
+              <option value="3">Heavy</option>
+            </select>
+          </label>
+          <label>Due
+            <input id="task-due" type="date" aria-label="Due date" />
+          </label>
+        </div>
+        <button type="submit" class="btn primary">Add</button>
       </form>
 
-      <ul id="task-list" class="task-list" aria-live="polite"></ul>
-
-      <div id="empty-state" class="empty-state hidden">
-        <div class="empty-emoji">🎉</div>
-        <p>Nothing here. You're all caught up!</p>
+      <div class="filter-row">
+        <button class="chip-btn active" data-filter="active">Active</button>
+        <button class="chip-btn" data-filter="all">All</button>
+        <button class="chip-btn" data-filter="done">Done</button>
+        <span class="spacer"></span>
+        <span class="hint">Sorted by fit for your current energy</span>
       </div>
-    </main>
+
+      <ul id="task-list" class="task-list"></ul>
+      <div id="tasks-empty" class="empty hidden">
+        <div class="empty-emoji">🌱</div>
+        <p>No tasks yet. Add one above to get moving.</p>
+      </div>
+    </section>
+
+    <!-- MATRIX -->
+    <section class="panel" id="panel-matrix">
+      <div class="section-head">Impact × Effort</div>
+      <p class="hint">Every active task, plotted. Aim for the top-left. Click a dot to focus it.</p>
+      <div class="matrix-wrap">
+        <svg id="matrix-svg" viewBox="0 0 480 420" class="matrix"></svg>
+        <div class="matrix-tip" id="matrix-tip" hidden></div>
+      </div>
+    </section>
+
+    <!-- MOMENTUM -->
+    <section class="panel" id="panel-momentum">
+      <div class="stat-row">
+        <div class="stat">
+          <div class="stat-num" id="stat-today">0</div>
+          <div class="stat-label">focus sessions today</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" id="stat-total">0</div>
+          <div class="stat-label">sessions all-time</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" id="stat-done">0</div>
+          <div class="stat-label">tasks completed</div>
+        </div>
+      </div>
+
+      <div class="section-head">Last 7 days</div>
+      <div class="bars" id="bars"></div>
+
+      <div class="section-head">Your energy today</div>
+      <svg id="energy-spark" class="energy-spark" viewBox="0 0 480 90"></svg>
+      <p class="hint" id="energy-hint">No energy logged yet today — tap an energy level up top.</p>
+    </section>
   </div>
 
   <script src="app.js"></script>
