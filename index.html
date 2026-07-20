@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TaskFlow — Task Manager</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="logo">✓</span>
+        <h1>TaskFlow</h1>
+      </div>
+
+      <nav class="filters" aria-label="Task filters">
+        <button class="filter-btn active" data-filter="all">
+          <span>Inbox</span><span class="count" data-count="all">0</span>
+        </button>
+        <button class="filter-btn" data-filter="today">
+          <span>Today</span><span class="count" data-count="today">0</span>
+        </button>
+        <button class="filter-btn" data-filter="active">
+          <span>Active</span><span class="count" data-count="active">0</span>
+        </button>
+        <button class="filter-btn" data-filter="completed">
+          <span>Completed</span><span class="count" data-count="completed">0</span>
+        </button>
+      </nav>
+
+      <div class="progress-block">
+        <div class="progress-label">
+          <span>Progress</span><span id="progress-pct">0%</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      </div>
+    </aside>
+
+    <main class="content">
+      <header class="content-head">
+        <h2 id="view-title">Inbox</h2>
+        <p id="view-sub" class="muted">Everything on your plate</p>
+      </header>
+
+      <form id="task-form" class="task-form" autocomplete="off">
+        <input
+          id="task-input"
+          class="task-input"
+          type="text"
+          placeholder="Add a task and press Enter…"
+          aria-label="Task title"
+          required
+        />
+        <select id="task-priority" class="task-priority" aria-label="Priority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+        <input id="task-due" class="task-due" type="date" aria-label="Due date" />
+        <button type="submit" class="add-btn">Add</button>
+      </form>
+
+      <ul id="task-list" class="task-list" aria-live="polite"></ul>
+
+      <div id="empty-state" class="empty-state hidden">
+        <div class="empty-emoji">🎉</div>
+        <p>Nothing here. You're all caught up!</p>
+      </div>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
