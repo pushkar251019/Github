@@ -23,12 +23,18 @@ open `index.html`.
 - 🧮 **Transparent fit score.** Every task shows a `fit` number so the ranking
   is never a black box. The formula rewards impact and matches effort to the
   energy you actually have right now.
+- 🗓️ **Plan my day.** One tap lays your tasks across a typical energy curve —
+  heavy, high-impact work at your morning peak; quick wins in the afternoon dip;
+  light tasks in the evening. Each task is placed in the slot where it fits best.
 - ⏱️ **Focus timer with a live progress ring** (15 / 25 / 50 min). Completing a
   session feeds your momentum and streak.
 - 🗺️ **Interactive Impact × Effort matrix** — every active task plotted into
   *Quick wins / Big bets / Fill-ins / Time sinks*. Click a dot to focus it.
 - 🔥 **Momentum & streaks** — sessions today, all-time, tasks completed, a
-  7-day bar chart, and a sparkline of your energy through the day.
+  7-day bar chart, a sparkline of your energy, and a **plain-English insight**
+  about what to tackle next.
+- 🎉 **Earned delight** — a confetti burst and a toast when you finish a *big
+  bet*, and a toast when your streak ticks up. Respects reduced-motion settings.
 - 💾 **Persistence** via `localStorage` — everything survives a refresh.
 - 📱 **Responsive**, dark, and animated.
 

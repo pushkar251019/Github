@@ -291,6 +291,64 @@ body {
 .empty-emoji { font-size: 2.4rem; margin-bottom: 8px; }
 .hidden { display: none !important; }
 
+/* Plan my day */
+.dayplan-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.dayplan-title { margin: 22px 0 12px; }
+.plan-output { display: flex; flex-direction: column; gap: 10px; }
+.plan-slot {
+  display: grid; grid-template-columns: 150px 1fr; gap: 14px; align-items: start;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px 16px;
+}
+.plan-when { display: flex; align-items: center; gap: 10px; }
+.plan-icon { font-size: 1.4rem; }
+.plan-label { font-weight: 700; font-size: 0.95rem; }
+.plan-sub { font-size: 0.72rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; }
+.plan-tasks { display: flex; flex-direction: column; gap: 6px; }
+.plan-task {
+  font-size: 0.9rem; padding: 7px 11px; border-radius: 8px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.plan-empty { font-size: 0.82rem; color: var(--faint); font-style: italic; padding: 4px 0; }
+.plan-note { font-size: 0.78rem; color: var(--muted); margin-top: 4px; }
+
+/* Insight */
+.insight {
+  margin: 20px 0 4px; padding: 16px 18px; border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--accent-soft), transparent);
+  border: 1px solid var(--border); border-left: 3px solid var(--accent);
+  font-size: 0.95rem; color: var(--text);
+}
+.insight::before { content: "💡 "; }
+
+/* Toast */
+.toast {
+  position: fixed; left: 50%; bottom: 28px;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--surface-2); color: var(--text);
+  border: 1px solid var(--accent); box-shadow: var(--shadow);
+  padding: 12px 20px; border-radius: 999px; font-size: 0.92rem; font-weight: 600;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s; z-index: 50;
+  max-width: 90vw; text-align: center;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Confetti */
+.confetti {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 60; display: none;
+}
+.confetti.active { display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+  .panel { animation: none; }
+  .toast { transition: opacity 0.01s; }
+}
+
+@media (max-width: 760px) {
+  .plan-slot { grid-template-columns: 1fr; gap: 8px; }
+}
+
 @media (max-width: 760px) {
   .now-grid { grid-template-columns: 1fr; }
   .focus-card { order: -1; }

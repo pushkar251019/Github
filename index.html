@@ -86,6 +86,14 @@
         </div>
       </div>
 
+      <div class="dayplan">
+        <div class="dayplan-head">
+          <span class="section-head dayplan-title">Your day, by energy</span>
+          <button class="btn" id="plan-btn">✨ Plan my day</button>
+        </div>
+        <div id="plan-output" class="plan-output"></div>
+      </div>
+
       <div class="shortlist">
         <div class="section-head">Up next for your energy</div>
         <ul id="shortlist-list" class="shortlist-list"></ul>
@@ -161,6 +169,8 @@
         </div>
       </div>
 
+      <div class="insight" id="insight"></div>
+
       <div class="section-head">Last 7 days</div>
       <div class="bars" id="bars"></div>
 
@@ -168,6 +178,9 @@
       <svg id="energy-spark" class="energy-spark" viewBox="0 0 480 90"></svg>
       <p class="hint" id="energy-hint">No energy logged yet today — tap an energy level up top.</p>
     </section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
   </div>
 
   <script src="app.js"></script>

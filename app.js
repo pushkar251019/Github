@@ -23,6 +23,7 @@
 
   let state = load();
   let focusTaskId = null;   // ephemeral: a task the user explicitly picked
+  let prevStreak = 0;       // for streak-milestone celebration
 
   function load() {
     try {
@@ -49,6 +50,58 @@
   }
   function escapeHtml(s) { const d = document.createElement("div"); d.textContent = s; return d.innerHTML; }
   const activeTasks = () => state.tasks.filter((t) => !t.done);
+
+  const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---------- Delight: toast + confetti ----------
+  function showToast(msg) {
+    const el = $("#toast");
+    if (!el) return;
+    el.textContent = msg;
+    el.classList.add("show");
+    clearTimeout(el._hideTimer);
+    el._hideTimer = setTimeout(() => el.classList.remove("show"), 2400);
+  }
+
+  function confettiBurst() {
+    const canvas = $("#confetti");
+    if (!canvas || prefersReducedMotion) return;
+    const ctx = canvas.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    const W = (canvas.width = window.innerWidth * dpr);
+    const H = (canvas.height = window.innerHeight * dpr);
+    canvas.classList.add("active");
+    const colors = ["#7c8cff", "#a97bff", "#46e0a0", "#ffb340", "#4ea8ff"];
+    const parts = [];
+    for (let i = 0; i < 90; i++) {
+      parts.push({
+        x: W / 2 + (Math.random() - 0.5) * 120 * dpr, y: H * 0.28,
+        vx: (Math.random() - 0.5) * 11 * dpr, vy: (Math.random() * -9 - 4) * dpr,
+        size: (Math.random() * 5 + 3) * dpr, color: colors[(Math.random() * colors.length) | 0],
+        rot: Math.random() * Math.PI, vr: (Math.random() - 0.5) * 0.3,
+      });
+    }
+    const start = performance.now(), DURATION = 1500, g = 0.35 * dpr;
+    function frame(now) {
+      const t = now - start;
+      ctx.clearRect(0, 0, W, H);
+      let alive = false;
+      const fade = Math.max(0, 1 - t / DURATION);
+      for (const p of parts) {
+        p.vy += g; p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+        if (p.y < H + 40 && fade > 0) alive = true;
+        ctx.save();
+        ctx.globalAlpha = fade;
+        ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        ctx.restore();
+      }
+      if (t < DURATION && alive) requestAnimationFrame(frame);
+      else { ctx.clearRect(0, 0, W, H); canvas.classList.remove("active"); }
+    }
+    requestAnimationFrame(frame);
+  }
 
   // ---------- The core: energy-aware fit ----------
   // Higher is better. Rewards impact; matches effort to the energy you have.
@@ -102,7 +155,14 @@
     const t = state.tasks.find((t) => t.id === id);
     if (!t) return;
     t.done = !t.done;
-    if (t.done) state.stats.tasksCompleted += 1;
+    if (t.done) {
+      state.stats.tasksCompleted += 1;
+      showToast(
+        t.impact === 3 ? "Big bet done — that's the hard stuff 💪" :
+        t.impact === 2 ? "Nice — solid progress ✓" : "Done ✓"
+      );
+      if (t.impact === 3) confettiBurst();   // celebrate the work that matters most
+    }
     if (t.done && focusTaskId === id) focusTaskId = null;
     save(); renderAll();
   }
@@ -159,6 +219,9 @@
       renderTimer("done");
       renderMomentum();
       renderStreak();
+      const ns = computeStreak();
+      showToast(ns > prevStreak ? `🔥 ${ns}-day streak!` : "Focus session banked ✓");
+      prevStreak = Math.max(prevStreak, ns);
       setTimeout(() => { this.remaining = state.focusMin * 60; renderTimer(); }, 1800);
     },
   };
@@ -374,6 +437,9 @@
     $("#stat-total").textContent = state.sessions.length;
     $("#stat-done").textContent = state.stats.tasksCompleted;
 
+    const ins = $("#insight");
+    if (ins) ins.textContent = insight();
+
     // 7-day bars
     const bars = $("#bars");
     bars.innerHTML = "";
@@ -423,6 +489,64 @@
       `<path d="${path}" fill="none" stroke="#7c8cff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${dots}`;
   }
 
+  // ---------- Plan my day: fit each task to the time its energy suits best ----------
+  const DAY_SLOTS = [
+    { key: "morning", label: "Morning", sub: "peak focus", icon: "🌅", energy: 3 },
+    { key: "afternoon", label: "Afternoon", sub: "the dip", icon: "🌞", energy: 1 },
+    { key: "evening", label: "Evening", sub: "winding down", icon: "🌙", energy: 2 },
+  ];
+  function planDay() {
+    const buckets = { morning: [], afternoon: [], evening: [] };
+    activeTasks().forEach((t) => {
+      // place each task in the slot where it scores highest — heavy/important
+      // work gravitates to your peak, quick wins to the afternoon dip.
+      let best = DAY_SLOTS[0], bestScore = -Infinity;
+      for (const s of DAY_SLOTS) {
+        const sc = fitScore(t, s.energy);
+        if (sc > bestScore) { bestScore = sc; best = s; }
+      }
+      buckets[best.key].push({ t, score: bestScore });
+    });
+    Object.values(buckets).forEach((b) => b.sort((a, b) => b.score - a.score));
+    return buckets;
+  }
+  function renderPlan() {
+    const out = $("#plan-output");
+    if (!out) return;
+    if (activeTasks().length === 0) {
+      out.innerHTML = `<div class="plan-empty">Add some tasks, then tap “Plan my day”.</div>`;
+      return;
+    }
+    const buckets = planDay();
+    out.innerHTML = DAY_SLOTS.map((s) => {
+      const items = buckets[s.key];
+      const tasks = items.length
+        ? items.map((x) => `<div class="plan-task">${escapeHtml(x.t.title)}</div>`).join("")
+        : `<div class="plan-empty">nothing scheduled</div>`;
+      return `
+        <div class="plan-slot">
+          <div class="plan-when"><span class="plan-icon">${s.icon}</span>
+            <div><div class="plan-label">${s.label}</div><div class="plan-sub">${s.sub}</div></div>
+          </div>
+          <div class="plan-tasks">${tasks}</div>
+        </div>`;
+    }).join("") +
+      `<div class="plan-note">Heavy, high-impact work lands at your peak; quick wins fill the afternoon dip.</div>`;
+  }
+
+  // ---------- A human insight for the Momentum tab ----------
+  function insight() {
+    const act = activeTasks();
+    if (act.length === 0) return "Inbox zero — enjoy it, or get a head start on tomorrow.";
+    const todayS = sessionsOn(todayKey());
+    const bigBets = act.filter((t) => t.impact === 3 && t.effort >= 2).length;
+    const quickWins = act.filter((t) => t.impact >= 2 && t.effort === 1).length;
+    if (todayS === 0) return "No focus sessions logged today. One 25-minute block beats a perfect plan.";
+    if (bigBets > 0) return `You have ${bigBets} big bet${bigBets > 1 ? "s" : ""} waiting — schedule one for your next high-energy window.`;
+    if (quickWins >= 3) return `${quickWins} quick wins are queued. Batch them in your next low-energy dip.`;
+    return "Nice balance — keep matching the work to your energy.";
+  }
+
   function renderCounts() {
     $("#tab-count").textContent = activeTasks().length;
   }
@@ -436,6 +560,9 @@
     renderMatrix();
     renderMomentum();
     renderTimer();
+    // keep the day plan fresh once it's been generated
+    const planOut = $("#plan-output");
+    if (planOut && planOut.innerHTML.trim()) renderPlan();
   }
 
   // ---------- Tabs ----------
@@ -476,6 +603,9 @@
 
     $("#timer-toggle").addEventListener("click", () => timer.running ? timer.pause() : timer.start());
     $("#timer-reset").addEventListener("click", () => timer.reset());
+
+    const planBtn = $("#plan-btn");
+    if (planBtn) planBtn.addEventListener("click", renderPlan);
   }
 
   // ---------- First run ----------
@@ -490,7 +620,7 @@
   // Small automation surface (used by tests / power users).
   window.__cadence = {
     get state() { return state; },
-    fitScore, ranked, computeStreak,
+    fitScore, ranked, computeStreak, planDay, insight,
     completeFocusSession() { timer.complete(); },
     setEnergy,
   };
@@ -500,4 +630,5 @@
   bind();
   seed();
   renderAll();
+  prevStreak = computeStreak();
 })();
