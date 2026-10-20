@@ -62,24 +62,37 @@ how people actually work.
 
 ## Run it
 
-No install required:
+No install required. Open `index.html` (the landing page) and click **Open the
+app**, or open `app.html` directly. To serve locally:
 
 ```bash
-# Open directly
-xdg-open index.html      # Linux
-open index.html          # macOS
-
-# …or serve locally
 python3 -m http.server 8000   # then visit http://localhost:8000
 ```
 
+### Publishing (free) with GitHub Pages
+
+The repo is a static site, so GitHub Pages can host it for free. In the repo on
+GitHub: **Settings → Pages → Build and deployment → Source: Deploy from a
+branch**, pick this branch and the `/ (root)` folder, then **Save**. After a
+minute the site is live at `https://<username>.github.io/<repo>/` — the landing
+page at `/` and the app at `/app.html`.
+
+### Collecting launch emails
+
+The landing page's signup form is ready for [Formspree](https://formspree.io)
+(free). Create a form there, then paste your endpoint into the `FORM_ENDPOINT`
+constant near the bottom of `index.html`. Until then the form confirms politely
+but stores nothing.
+
 ## Project structure
 
-| File         | Purpose                                                      |
-|--------------|--------------------------------------------------------------|
-| `index.html` | Layout: energy picker, tabs (Now / Tasks / Matrix / Momentum) |
-| `styles.css` | Dark theme, ring timer, matrix, responsive design            |
-| `app.js`     | Fit engine, focus timer, matrix + momentum rendering, storage |
+| File                      | Purpose                                                        |
+|---------------------------|----------------------------------------------------------------|
+| `index.html`              | **Landing page** — the pitch, feature highlights, email signup |
+| `app.html`                | **The app** — energy picker, tabs (Now / Tasks / Matrix / Momentum) |
+| `styles.css`              | Dark theme, ring timer, matrix, responsive design              |
+| `app.js`                  | Fit engine, focus timer, plan-my-day, momentum, storage        |
+| `assets/cadence-hero.png` | Hero screenshot used on the landing page                       |
 
 ## Data model
 
