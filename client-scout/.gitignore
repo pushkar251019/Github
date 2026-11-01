@@ -1,0 +1,7 @@
+# your private data - never commit
+scout.json
+icp.md
+.scout/
+leads*.csv
+__pycache__/
+*.pyc
