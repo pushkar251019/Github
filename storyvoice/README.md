@@ -45,4 +45,4 @@ Tests: `python -m pytest -q tests`
 
 ## Please note
 - Only download books you have the right to read. The built-in search covers public-domain and openly shared libraries, and the page scanner just collects links that a site already offers.
-- Scanned PDFs (images with no text layer) need OCR first, for example with `ocrmypdf`.
+- Scanned PDFs (photos of pages): Internet Archive books automatically use the archive's own OCR text. For other scans, install Tesseract (`winget install UB-Mannheim.TesseractOCR`, tick Hindi) and the app reads the pages itself.

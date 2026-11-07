@@ -135,7 +135,9 @@ async function openForListening(id) {
     $("#pageTo").value = Math.min(pages.length, 5);
     $("#pageCount").textContent = `of ${pages.length} — long books take a while, start with a few pages`;
   } else $("#listenText").value = it.text;
-  $("#analysis").textContent = ""; showTab("listen");
+  $("#analysis").textContent = "";
+  $("#ocrBox").classList.toggle("hidden", !(words < 30 && it.file));
+  showTab("listen");
 }
 function narrBody() {
   const paged = state.item && !$("#pageRange").classList.contains("hidden");
@@ -202,6 +204,16 @@ function showPlayer(res) {
   };
   audio.play().catch(() => {});
 }
+
+$("#ocrBtn").onclick = async () => {
+  const st = $("#narrStatus"), btn = $("#ocrBtn"); btn.disabled = true;
+  try {
+    const {job} = await api(`/api/library/${state.item.id}/ocr?page_from=${$("#pageFrom").value}&page_to=${$("#pageTo").value}`, {method: "POST"});
+    await pollJob(job, (j) => status(st, j.message));
+    status(st, "✓ Text extracted — now press Create audio"); await openForListening(state.item.id);
+  } catch (err) { status(st, err.message, true); }
+  btn.disabled = false;
+};
 
 /* ---------- init ---------- */
 api("/api/meta").then((m) => {

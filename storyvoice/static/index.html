@@ -82,6 +82,8 @@
       <h2 id="listenTitle">Choose something to listen to</h2>
       <p id="listenInfo" class="muted">Pick an item in the Library, or paste text below.</p>
       <textarea id="listenText" rows="6" placeholder="Text to narrate…"></textarea>
+      <div id="ocrBox" class="status hidden">📷 This PDF is a scanned book (pictures of pages, no text).
+        Create audio will read the chosen pages with OCR automatically, or <button id="ocrBtn">📖 Extract text now</button></div>
       <div id="pageRange" class="row hidden">
         <label>Pages <input type="number" id="pageFrom" min="1" value="1"> to <input type="number" id="pageTo" min="1"></label>
         <span id="pageCount" class="muted"></span>

@@ -143,3 +143,52 @@ def test_reject_non_pdf_upload():
 def test_music_preview_and_ui():
     assert client.get("/api/music/epic.wav?seconds=5").status_code == 200
     assert "StoryVoice" in client.get("/").text
+
+
+def _scanned_pdf(lines):
+    """Image-only PDF (no text layer), like a scanned book."""
+    from PIL import Image, ImageDraw, ImageFont
+    pages = []
+    for line in lines:
+        img = Image.new("RGB", (1240, 400), "white")
+        d = ImageDraw.Draw(img)
+        try:
+            font = ImageFont.truetype("DejaVuSans.ttf", 48)
+        except OSError:
+            font = ImageFont.load_default()
+        d.text((60, 150), line, fill="black", font=font)
+        pages.append(img)
+    buf = io.BytesIO()
+    pages[0].save(buf, "PDF", save_all=True, append_images=pages[1:])
+    return buf.getvalue()
+
+
+def test_scanned_ia_book_gets_archive_text_and_narrates(monkeypatch):
+    from app import library, ocr
+    pdf = _scanned_pdf(["page one", "page two"])
+    up = client.post("/api/pdf/upload", files={"file": ("gita.pdf", pdf, "application/pdf")}).json()
+    assert ocr.needs_ocr(client.get(f"/api/library/{up['id']}").json()["text"])
+    library.update_item(up["id"], source="https://archive.org/download/gita123/gita.pdf")
+    story = "\n\n".join(["Arjuna stood on the battlefield, his bow trembling as the armies gathered. " * 3] * 4)
+    monkeypatch.setattr(ocr, "fetch_ia_text", lambda ident: story if ident == "gita123" else "")
+    r = client.post("/api/narrate", json={"item_id": up["id"], "page_from": 1, "page_to": 2, "music": False})
+    assert r.status_code == 200, r.text
+    j = _wait(r.json()["job"])
+    assert j["status"] == "done", j
+    assert "Arjuna" in j["result"]["timeline"][0]["text"]
+
+
+def test_ia_identifier():
+    from app import ocr
+    assert ocr.ia_identifier("https://archive.org/download/abc_123/x.pdf") == "abc_123"
+    assert ocr.ia_identifier("https://example.com/download/abc/x.pdf") is None
+
+
+@pytest.mark.skipif(not __import__("shutil").which("tesseract"), reason="tesseract not installed")
+def test_tesseract_ocr_reads_scanned_pages():
+    pdf = _scanned_pdf(["The brave king rode into battle", "Hope returned to the kingdom"])
+    up = client.post("/api/pdf/upload", files={"file": ("scan.pdf", pdf, "application/pdf")}).json()
+    j = _wait(client.post(f"/api/library/{up['id']}/ocr?page_from=1&page_to=2").json()["job"])
+    assert j["status"] == "done", j
+    text = client.get(f"/api/library/{up['id']}").json()["text"].lower()
+    assert "brave king" in text and "hope returned" in text

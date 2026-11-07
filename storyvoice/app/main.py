@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from . import library, mood, music, narrate, pdf_finder, transcribe, tts
+from . import library, mood, music, narrate, ocr, pdf_finder, transcribe, tts
 from .config import AUDIO_DIR, BASE_DIR, TMP_DIR
 
 app = FastAPI(title="StoryVoice")
@@ -69,9 +69,24 @@ def pdf_download(req: DownloadReq):
     try:
         if req.text_url and not req.url:
             return pdf_finder.download_text(req.text_url, req.title or "Book")
-        return pdf_finder.download_pdf(req.url, req.title)
+        item = pdf_finder.download_pdf(req.url, req.title)
     except Exception as e:
         raise HTTPException(400, f"Download failed: {e}")
+    # Scanned book from Internet Archive? Pull IA's own OCR text right away.
+    if ocr.needs_ocr(library.get_text(item["id"])) and ocr.ia_identifier(item.get("source", "")):
+        try:
+            item = ocr.ocr_item(item["id"])
+        except Exception:
+            pass
+    return item
+
+
+@app.post("/api/library/{item_id}/ocr")
+def lib_ocr(item_id: str, page_from: int = 1, page_to: int = 0):
+    if not library.get_item(item_id):
+        raise HTTPException(404, "Not found")
+    return {"job": _run_job("ocr", lambda job_id, progress: ocr.ocr_item(
+        item_id, page_from or 1, page_to, progress))}
 
 
 @app.post("/api/pdf/upload")
@@ -200,10 +215,19 @@ def analyse(req: NarrateReq):
 @app.post("/api/narrate")
 def narrate_start(req: NarrateReq):
     text = _select_text(req)
-    if not text:
+    item = library.get_item(req.item_id) if req.item_id else None
+    scanned = not text and item and item.get("file")
+    if not text and not scanned:
         raise HTTPException(400, "Nothing to read — add text or pick pages")
 
     def fn(job_id, progress):
+        nonlocal text
+        if scanned:  # scanned PDF: read the chosen pages with OCR first
+            ocr.ocr_item(req.item_id, req.page_from or 1, req.page_to or (req.page_from or 1) + 4,
+                         lambda m, f=None: progress(m))
+            text = _select_text(req)
+            if not text:
+                raise RuntimeError("No readable text found on those pages, even after OCR")
         return narrate.narrate(text, job_id, accent=req.accent, gender=req.gender,
                                music_on=req.music, music_volume=req.music_volume,
                                genre=req.genre, force_mood=req.mood, speed=req.speed,
