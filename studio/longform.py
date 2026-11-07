@@ -15,6 +15,7 @@ import hashlib
 import json
 import random
 import re
+import os
 import subprocess
 from pathlib import Path
 
@@ -59,6 +60,33 @@ def run(cmd: list):
     if p.returncode:
         raise RuntimeError(f"{cmd[0]} failed: {p.stderr[-800:]}")
     return p.stdout
+
+
+_ENC = None
+
+
+def encoder() -> list:
+    """Pick a video encoder once. STUDIO_ENCODER=auto tries hardware encoders
+    (Intel QuickSync, NVIDIA NVENC, AMD AMF) and falls back to libx264.
+    Hardware encoding is several times faster on laptops."""
+    global _ENC
+    if _ENC is None:
+        want = os.getenv("STUDIO_ENCODER", "auto")
+        opts = {
+            "h264_qsv": ["-c:v", "h264_qsv", "-preset", "veryfast", "-global_quality", "23"],
+            "h264_nvenc": ["-c:v", "h264_nvenc", "-preset", "p4", "-cq", "23"],
+            "h264_amf": ["-c:v", "h264_amf", "-quality", "speed", "-rc", "cqp", "-qp_i", "23", "-qp_p", "23"],
+            "libx264": ["-c:v", "libx264", "-preset", "veryfast", "-crf", "21"],
+        }
+        order = list(opts) if want == "auto" else [want, "libx264"]
+        for name in order:
+            test = subprocess.run(["ffmpeg", "-v", "error", "-f", "lavfi", "-i", "color=s=256x256:d=0.2",
+                                   "-vf", "format=yuv420p", *opts[name], "-f", "null", "-"],
+                                  capture_output=True)
+            if test.returncode == 0:
+                _ENC = opts[name]
+                break
+    return _ENC
 
 
 def duration(path: Path) -> float:
@@ -150,7 +178,7 @@ class Builder:
             inp = ["-stream_loop", "-1", "-ss", f"{start:.2f}", "-i", str(src)]
             vf = fit + ",format=yuv420p"
         run(["ffmpeg", "-y", "-v", "error", *inp, "-i", str(audio), "-map", "0:v", "-map", "1:a",
-             "-vf", vf, "-t", f"{dur:.3f}", "-c:v", "libx264", "-preset", "veryfast", "-crf", "21",
+             "-vf", vf, "-t", f"{dur:.3f}", *encoder(),
              "-c:a", "aac", "-ar", "48000", "-ac", "2", "-b:a", "192k", str(out)])
         return out
 
@@ -212,7 +240,7 @@ class Builder:
             af = ("[1:a]volume=0.35[m];[0:a]asplit[v1][v2];[m][v1]sidechaincompress=threshold=0.03:"
                   "ratio=10:attack=20:release=400[d];[v2][d]amix=inputs=2:duration=first:normalize=0[a]")
             cmd += ["-filter_complex", af, "-map", "0:v", "-map", "[a]"]
-        cmd += vf + (["-c:v", "libx264", "-preset", "veryfast", "-crf", "21"] if vf else ["-c:v", "copy"])
+        cmd += vf + (encoder() if vf else ["-c:v", "copy"])
         cmd += ["-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(out)]
         subprocess_cwd_run(cmd, cwd=out.parent)
         if self.credits:

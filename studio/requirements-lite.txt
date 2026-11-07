@@ -1,0 +1,9 @@
+# Laptop / CPU-only install: voice, captions, long-form editing, stock search.
+# Install CPU PyTorch first (run.bat does this for you).
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+numpy
+soundfile
+kokoro>=0.9
+faster-whisper

@@ -53,6 +53,32 @@ Avatar scenes (optional): install [LatentSync](https://github.com/bytedance/Late
 `LATENTSYNC_DIR` and `LATENTSYNC_PY` (see `engines.lipsync`). For best results, record 30–60s of
 yourself facing the camera in good light, mouth always visible.
 
+## Windows laptop (no NVIDIA GPU): the hybrid setup
+For a typical laptop (e.g. i7 8th-gen, 16GB RAM, small AMD/Intel graphics):
+
+**One-time install (PowerShell):**
+```powershell
+winget install Python.Python.3.12
+winget install Gyan.FFmpeg
+winget install Git.Git
+git clone https://github.com/pushkar251019/Github.git
+cd Github; git checkout claude/bold-bardeen-oz2qiu
+```
+Kokoro also needs **espeak-ng**: install the `.msi` from https://github.com/espeak-ng/espeak-ng/releases.
+Then double-click **`studio\run.bat`**. It installs the laptop version on the first run and opens the app.
+
+**On the laptop (free):** voiceovers, captions, stock search, and full long-form editing with stock footage or your own B-roll.
+Exports automatically use the Intel QuickSync encoder when it's available, which is much faster than CPU encoding.
+Close Chrome and other heavy apps while rendering.
+
+**On a rented GPU (pay only while it's on):** voice cloning at speed, AI video clips (`[ai: …]`), images, and avatar scenes.
+1. On RunPod or Vast.ai, start an RTX 4090 pod (24GB) with a PyTorch template.
+2. In the pod terminal: `git clone` this repo, `cd studio && ./run.sh`, and open port 7860 through the pod's HTTP proxy.
+3. Batch a session's worth of work, download the outputs, then **stop the pod**. Billing runs until you stop it.
+
+Workflow that keeps costs near zero: write the script and build the full 30-min video on the laptop with stock footage and your
+B-roll. Rent a GPU for an hour only when you want AI hero shots or avatar scenes, then drop those clips into **My B-roll**.
+
 ## Hardware: what you actually need
 | Setup | What runs well | Rough cost |
 |---|---|---|
