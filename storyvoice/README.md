@@ -18,6 +18,7 @@ cd storyvoice
 pip install -r requirements.txt      # also needs ffmpeg installed
 uvicorn app.main:app --port 8000
 # open http://localhost:8000
+# Windows: after the first install, just double-click start.bat
 ```
 
 Optional settings:
