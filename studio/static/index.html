@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio — self-hosted voice, image & video</title>
+<style>
+  :root { --bg:#0f1115; --card:#181b22; --line:#2a2f3a; --text:#e8eaf0; --muted:#8b93a5; --accent:#7c9cff; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:15px/1.5 system-ui,sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:20px 28px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
+  h1 { margin:0; font-size:20px; } #device { color:var(--muted); font-size:13px; }
+  nav { display:flex; gap:6px; padding:16px 28px 0; flex-wrap:wrap; }
+  nav button { background:none; border:1px solid var(--line); color:var(--muted); padding:8px 16px; border-radius:20px; cursor:pointer; }
+  nav button.on { background:var(--accent); border-color:var(--accent); color:#0f1115; font-weight:600; }
+  main { display:grid; grid-template-columns:minmax(300px,460px) 1fr; gap:24px; padding:20px 28px; }
+  @media (max-width:860px){ main { grid-template-columns:1fr; } }
+  form { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; display:none; flex-direction:column; gap:12px; }
+  form.on { display:flex; }
+  label { font-size:13px; color:var(--muted); display:flex; flex-direction:column; gap:4px; }
+  textarea, input, select { background:var(--bg); color:var(--text); border:1px solid var(--line); border-radius:8px; padding:9px; font:inherit; }
+  textarea { min-height:120px; resize:vertical; }
+  .row { display:flex; gap:10px; } .row > * { flex:1; }
+  form button { background:var(--accent); color:#0f1115; border:0; border-radius:8px; padding:11px; font-weight:600; cursor:pointer; }
+  .hint { font-size:12px; color:var(--muted); margin:0; }
+  #jobs { display:flex; flex-direction:column; gap:12px; }
+  .job { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px; }
+  .job .meta { display:flex; justify-content:space-between; font-size:13px; color:var(--muted); margin-bottom:8px; }
+  .job img, .job video { max-width:100%; border-radius:8px; } .job audio { width:100%; }
+  .err { color:#ff8b8b; } a { color:var(--accent); }
+</style>
+</head>
+<body>
+<header><h1>Studio</h1><span id="device">checking hardware…</span></header>
+<nav id="tabs">
+  <button data-tab="longform" class="on">Long video</button>
+  <button data-tab="tts">Voice</button>
+  <button data-tab="clone">Voice clone</button>
+  <button data-tab="image">Image</button>
+  <button data-tab="video">Video</button>
+  <button data-tab="captions">Captions</button>
+  <button data-tab="stock">Stock search</button>
+  <button data-tab="library">My B-roll</button>
+</nav>
+<main>
+  <section>
+    <form id="longform" class="on" data-api="/api/longform">
+      <label>Script (blank line = new scene; any length, 30+ min is fine)
+        <textarea name="script" required style="min-height:220px" placeholder="[avatar] Welcome back to the channel...
+
+[broll: ocean waves at sunrise] Stillness is not the absence of movement...
+
+[ai: monk meditating in mist, slow dolly-in] ...
+
+[library] A scene that uses your own footage...
+
+A paragraph with no tag picks visuals automatically."></textarea></label>
+      <div class="row">
+        <label>Format<select name="orientation"><option value="landscape">YouTube 16:9</option><option value="portrait">Reels / Shorts 9:16</option></select></label>
+        <label>Stock voice<select name="voice" class="voices"></select></label>
+      </div>
+      <label>Your voice sample (optional, clones it for the whole video)<input name="reference" type="file" accept="audio/*"></label>
+      <label>Your face video for [avatar] scenes (optional)<input name="face" type="file" accept="video/*"></label>
+      <label>Background music (optional, auto-ducked under voice)<input name="music" type="file" accept="audio/*"></label>
+      <div class="row">
+        <label>AI clip model<select name="ai_model"><option value="ltx">LTX (fast)</option><option value="wan">Wan 2.2 (quality)</option></select></label>
+        <label>Captions<select name="burn_captions"><option value="true">Burn into video</option><option value="false">.srt file only</option></select></label>
+      </div>
+      <button>Build video</button>
+      <p class="hint">Voice → B-roll per scene → edit → captions → music. Stock footage needs free Pexels/Pixabay keys (see README).</p>
+    </form>
+    <form id="stock" data-api="">
+      <label>Search royalty-free media<input name="q" required placeholder="sunrise over mountains"></label>
+      <div class="row">
+        <label>Type<select name="kind"><option value="video">Videos</option><option value="photo">Photos</option><option value="music">Music (links)</option></select></label>
+        <label>Format<select name="orientation"><option value="landscape">16:9</option><option value="portrait">9:16</option></select></label>
+      </div>
+      <button>Search</button>
+      <div id="stockResults" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+    </form>
+    <form id="library" data-api="/api/library">
+      <label>Upload your own B-roll (videos/photos). Used by [library] and untagged scenes.<input name="files" type="file" multiple accept="video/*,image/*" required></label>
+      <button>Upload</button>
+      <p class="hint" id="libList"></p>
+    </form>
+    <form id="tts" data-api="/api/tts">
+      <label>Script<textarea name="text" required placeholder="Type your voiceover…"></textarea></label>
+      <div class="row">
+        <label>Voice<select name="voice" class="voices"></select></label>
+        <label>Speed<input name="speed" type="number" step="0.05" min="0.5" max="2" value="1"></label>
+      </div>
+      <button>Generate voice</button>
+      <p class="hint">Kokoro, a small open model. Runs on CPU in seconds.</p>
+    </form>
+    <form id="clone" data-api="/api/clone">
+      <label>Script<textarea name="text" required></textarea></label>
+      <label>Reference voice (10–20s clean audio, wav/mp3)<input name="reference" type="file" accept="audio/*" required></label>
+      <label>Expressiveness (0.25 calm – 1.0 dramatic)<input name="exaggeration" type="number" step="0.05" min="0.25" max="1.5" value="0.5"></label>
+      <button>Clone & speak</button>
+      <p class="hint">Chatterbox. Only clone voices you own or have permission to use.</p>
+    </form>
+    <form id="image" data-api="/api/image">
+      <label>Prompt<textarea name="prompt" required placeholder="cinematic portrait, golden hour, 35mm…"></textarea></label>
+      <div class="row">
+        <label>Size<select name="size">
+          <option value="1024x1024">Square 1:1</option>
+          <option value="768x1344">Reel / Story 9:16</option>
+          <option value="1344x768">YouTube 16:9</option>
+          <option value="896x1152">Instagram 4:5</option>
+        </select></label>
+        <label>Seed<input name="seed" type="number" value="0"></label>
+      </div>
+      <button>Generate image</button>
+      <p class="hint">FLUX.1-schnell. Needs a GPU for reasonable speed.</p>
+    </form>
+    <form id="video" data-api="/api/video">
+      <label>Prompt<textarea name="prompt" required placeholder="slow dolly-in on a monk meditating at sunrise, mist, cinematic…"></textarea></label>
+      <div class="row">
+        <label>Model<select name="model"><option value="ltx">LTX-Video (fast drafts)</option><option value="wan">Wan 2.2 (higher quality)</option></select></label>
+        <label>Seconds<input name="seconds" type="number" min="2" max="10" value="5"></label>
+      </div>
+      <label>Start image (optional; LTX animates it)<input name="start_image" type="file" accept="image/*"></label>
+      <button>Generate video</button>
+      <p class="hint">Needs an NVIDIA GPU (12GB+). A 5s clip takes about 1–10 min depending on the card.</p>
+    </form>
+    <form id="captions" data-api="/api/captions">
+      <label>Audio or video file<input name="media" type="file" accept="audio/*,video/*" required></label>
+      <button>Make .srt captions</button>
+      <p class="hint">faster-whisper. Works on CPU.</p>
+    </form>
+  </section>
+  <section id="jobs"></section>
+</main>
+<script>
+const $ = s => document.querySelector(s);
+const tabs = document.querySelectorAll('nav button');
+tabs.forEach(b => b.onclick = () => {
+  tabs.forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('form').forEach(f => f.classList.toggle('on', f.id === b.dataset.tab));
+});
+
+fetch('/api/info').then(r => r.json()).then(d => {
+  $('#device').textContent = `Running on: ${d.device.toUpperCase()}${d.fake ? ' (test mode)' : ''}`;
+  const opts = Object.entries(d.voices).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+  document.querySelectorAll('.voices').forEach(el => el.innerHTML = opts);
+});
+const loadLib = () => fetch('/api/library').then(r => r.json()).then(l =>
+  $('#libList').textContent = l.length ? `In library (${l.length}): ${l.join(', ')}` : 'Library is empty.');
+loadLib();
+
+$('#stock').addEventListener('submit', async e => {
+  e.preventDefault(); e.stopImmediatePropagation();
+  const q = new URLSearchParams(new FormData(e.target));
+  const r = await fetch('/api/stock?' + q);
+  const box = $('#stockResults');
+  if (!r.ok) { box.innerHTML = `<p class="err">${esc((await r.json()).detail)}</p>`; return; }
+  box.innerHTML = (await r.json()).map(x => x.download
+    ? `<div><img src="${esc(x.preview)}" style="width:100%;border-radius:6px"><div class="hint">${esc(x.source)} · ${esc(x.credit)}${x.duration ? ' · ' + x.duration + 's' : ''}<br><a href="${esc(x.download)}" target="_blank">Download</a> · <a href="${esc(x.page)}" target="_blank">Page</a></div></div>`
+    : `<div class="hint"><a href="${esc(x.page)}" target="_blank">${esc(x.source)}</a><br>${esc(x.note)}</div>`).join('') || '<p class="hint">No results.</p>';
+}, true);
+
+document.querySelectorAll('form[data-api]:not([data-api=""])').forEach(form => form.onsubmit = async e => {
+  e.preventDefault();
+  const data = new FormData(form);
+  if (data.has('size')) {
+    const [w, h] = data.get('size').split('x'); data.delete('size');
+    data.set('width', w); data.set('height', h);
+  }
+  const btn = form.querySelector('button'); btn.disabled = true;
+  try {
+    const r = await fetch(form.dataset.api, { method: 'POST', body: data });
+    if (!r.ok) alert((await r.json()).detail || 'Request failed');
+    if (form.id === 'library') { loadLib(); form.reset(); } else refresh();
+  } finally { btn.disabled = false; }
+});
+
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function preview(j) {
+  if (j.status === 'error') return `<div class="err">${esc(j.error)}</div>`;
+  if (j.status !== 'done') return '';
+  const url = `/outputs/${j.file}`;
+  const media = { voice: `<audio controls src="${url}"></audio>`, clone: `<audio controls src="${url}"></audio>`,
+    image: `<img src="${url}">`, video: `<video controls src="${url}"></video>`,
+    longform: `<video controls src="${url}"></video>` }[j.kind] || '';
+  const srt = j.kind === 'longform' ? ` · <a href="${url.replace('.mp4', '.srt')}" download>Captions .srt</a>` : '';
+  return `${media}<div><a href="${url}" download>Download ${esc(j.file)}</a>${srt}</div>`;
+}
+async function refresh() {
+  const jobs = await (await fetch('/api/jobs')).json();
+  $('#jobs').innerHTML = jobs.map(j => {
+    const t = j.finished ? ` · ${Math.round(j.finished - j.started)}s` : '';
+    return `<div class="job"><div class="meta"><span>${j.kind}</span><span>${j.status}${j.status === 'running' && j.progress != null ? ' ' + j.progress + '%' : ''}${t}</span></div>${j.note ? `<div class="hint">${esc(j.note)}</div>` : ''}${preview(j)}</div>`;
+  }).join('') || '<p class="hint">Your generations will appear here.</p>';
+  if (jobs.some(j => j.status === 'queued' || j.status === 'running')) setTimeout(refresh, 2000);
+}
+refresh();
+</script>
+</body>
+</html>

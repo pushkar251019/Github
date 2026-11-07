@@ -1,0 +1,21 @@
+# Web server
+fastapi>=0.110
+uvicorn>=0.29
+python-multipart>=0.0.9
+# Core ML (install the torch build for your GPU first: https://pytorch.org/get-started/locally/)
+torch
+torchaudio
+numpy
+soundfile
+# Voice
+kokoro>=0.9
+chatterbox-tts
+# Image + video
+diffusers>=0.35
+transformers
+accelerate
+sentencepiece
+imageio[ffmpeg]
+ftfy
+# Captions
+faster-whisper

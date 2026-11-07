@@ -1,0 +1,7 @@
+outputs/
+uploads/
+.venv/
+__pycache__/
+library/
+cache/
+work/
