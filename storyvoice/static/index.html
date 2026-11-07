@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StoryVoice — find, script & listen</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="brand">🎧 <b>StoryVoice</b><span>find it · script it · listen to it</span></div>
+  <nav>
+    <button data-tab="find" class="active">📚 Find PDFs</button>
+    <button data-tab="video">🎬 Video → Script</button>
+    <button data-tab="library">🗂️ Library</button>
+    <button data-tab="listen">🔊 Listen</button>
+  </nav>
+</header>
+
+<main>
+  <!-- FIND -->
+  <section id="find" class="tab active">
+    <div class="card">
+      <h2>Search free books</h2>
+      <p class="muted">Public-domain &amp; openly licensed books from Internet Archive and Project Gutenberg.</p>
+      <form id="searchForm" class="row">
+        <input id="searchQ" placeholder="e.g. Sherlock Holmes, Panchatantra, Bhagavad Gita, Jane Austen" required>
+        <button>Search</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Grab PDFs from any web page</h2>
+      <p class="muted">Paste a page URL — every PDF link on it is listed. Or paste a direct .pdf link.</p>
+      <form id="scanForm" class="row">
+        <input id="scanUrl" type="url" placeholder="https://example.com/free-ebooks" required>
+        <button>Scan</button>
+      </form>
+      <label class="upload">or upload a PDF from your device <input type="file" id="pdfUpload" accept="application/pdf"></label>
+    </div>
+    <div id="findResults" class="results"></div>
+  </section>
+
+  <!-- VIDEO -->
+  <section id="video" class="tab">
+    <div class="card">
+      <h2>Turn a video into a script</h2>
+      <p class="muted">YouTube / Vimeo / Instagram / 1000+ sites, or upload a file. Uses the video's captions when available, otherwise AI speech recognition (Whisper).</p>
+      <form id="videoForm">
+        <input id="videoUrl" placeholder="https://www.youtube.com/watch?v=…">
+        <label class="upload">or upload video/audio <input type="file" id="videoFile" accept="video/*,audio/*"></label>
+        <div class="row">
+          <select id="videoLang">
+            <option value="">Language: auto-detect</option>
+            <option value="en">English</option><option value="hi">Hindi</option>
+          </select>
+          <button>Create script</button>
+        </div>
+      </form>
+      <div id="videoStatus" class="status"></div>
+    </div>
+    <div id="videoOut" class="card hidden">
+      <h2 id="videoTitle"></h2>
+      <textarea id="videoScript" rows="16"></textarea>
+      <div class="row"><button id="videoSave">Save edits</button><button id="videoListen" class="primary">🔊 Listen to this</button></div>
+    </div>
+  </section>
+
+  <!-- LIBRARY -->
+  <section id="library" class="tab">
+    <div class="card">
+      <h2>Write or paste your own script</h2>
+      <input id="scriptTitle" placeholder="Title">
+      <textarea id="scriptText" rows="8" placeholder="Paste a story, chapter, your YouTube script…"></textarea>
+      <div class="row"><button id="scriptSave">Save to library</button><button id="scriptListen" class="primary">🔊 Listen now</button></div>
+    </div>
+    <div id="libList" class="results"></div>
+  </section>
+
+  <!-- LISTEN -->
+  <section id="listen" class="tab">
+    <div class="card">
+      <h2 id="listenTitle">Choose something to listen to</h2>
+      <p id="listenInfo" class="muted">Pick an item in the Library, or paste text below.</p>
+      <textarea id="listenText" rows="6" placeholder="Text to narrate…"></textarea>
+      <div id="pageRange" class="row hidden">
+        <label>Pages <input type="number" id="pageFrom" min="1" value="1"> to <input type="number" id="pageTo" min="1"></label>
+        <span id="pageCount" class="muted"></span>
+      </div>
+      <div class="grid">
+        <label>Voice accent
+          <select id="accent"><option value="us">American</option><option value="gb">British</option><option value="in">Indian English</option><option value="hi">Hindi</option></select>
+        </label>
+        <label>Narrator
+          <select id="gender"><option value="auto">Auto (by mood)</option><option value="f">Female</option><option value="m">Male</option></select>
+        </label>
+        <label>Genre
+          <select id="genre"><option value="">Auto-detect</option></select>
+        </label>
+        <label>Mood
+          <select id="moodSel"><option value="">Auto — follows the story</option></select>
+        </label>
+        <label class="inline">Speed <input type="range" id="speed" min="-30" max="30" value="0"><span id="speedV">0%</span></label>
+        <label class="inline"><input type="checkbox" id="musicOn" checked> Background music
+          <input type="range" id="musicVol" min="0" max="50" value="18"><span id="musicV">18%</span></label>
+      </div>
+      <div class="row">
+        <button id="analyseBtn">Analyse mood</button>
+        <button id="previewMusic">▶ Preview music</button>
+        <button id="narrateBtn" class="primary">🎙️ Create audio</button>
+      </div>
+      <div id="analysis" class="status"></div>
+      <div id="narrStatus" class="status"></div>
+      <div class="bar hidden" id="narrBar"><div></div></div>
+    </div>
+    <div id="player" class="card hidden">
+      <audio id="audio" controls></audio>
+      <div class="row"><a id="dl" class="button" download>⬇ Download MP3</a><span id="playerInfo" class="muted"></span></div>
+      <div id="moodStrip" class="strip"></div>
+      <div id="follow" class="follow"></div>
+    </div>
+  </section>
+</main>
+<audio id="musicPreview"></audio>
+<div id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>

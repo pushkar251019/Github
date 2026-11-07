@@ -1,5 +1,7 @@
 # Cadence
 
+> Also in this repo: **[StoryVoice](storyvoice/)**, an app that downloads PDFs, turns videos into scripts, and reads them aloud with mood-matched voices and background music.
+
 **Do the right thing at the right energy.**
 
 Every to-do app answers *"what do I have to do?"* Cadence answers a harder,
