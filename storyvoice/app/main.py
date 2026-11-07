@@ -71,6 +71,19 @@ def pdf_download(req: DownloadReq):
             return pdf_finder.download_text(req.text_url, req.title or "Book")
         item = pdf_finder.download_pdf(req.url, req.title)
     except Exception as e:
+        # Locked Internet Archive PDF? Its OCR text is often still public.
+        ident = req.url[3:] if req.url.startswith("ia:") else ocr.ia_identifier(req.url)
+        text = ""
+        if ident:
+            try:
+                text = ocr.fetch_ia_text(ident)
+            except Exception:
+                pass
+        if len(text.split()) > 50:
+            pages = ocr.split_pseudo_pages(text)
+            return library.add_item("book", req.title or ident, text="\f".join(pages),
+                                    source=f"https://archive.org/details/{ident}",
+                                    meta={"pages": len(pages), "text_source": "archive.org OCR"})
         raise HTTPException(400, f"Download failed: {e}")
     # Scanned book from Internet Archive? Pull IA's own OCR text right away.
     if ocr.needs_ocr(library.get_text(item["id"])) and ocr.ia_identifier(item.get("source", "")):

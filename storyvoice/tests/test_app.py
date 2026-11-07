@@ -192,3 +192,23 @@ def test_tesseract_ocr_reads_scanned_pages():
     assert j["status"] == "done", j
     text = client.get(f"/api/library/{up['id']}").json()["text"].lower()
     assert "brave king" in text and "hope returned" in text
+
+
+def test_locked_ia_pdf_falls_back_to_archive_text(monkeypatch):
+    from app import ocr
+    def locked(url, title=""):
+        raise pdf_finder.FetchError("This Internet Archive book is borrow-only")
+    monkeypatch.setattr(pdf_finder, "download_pdf", locked)
+    monkeypatch.setattr(ocr, "fetch_ia_text", lambda ident: "Breathe in slowly and relax. " * 40)
+    r = client.post("/api/pdf/download", json={"url": "ia:howtomeditate", "title": "How to Meditate"})
+    assert r.status_code == 200, r.text
+    assert "Breathe" in client.get(f"/api/library/{r.json()['id']}").json()["text"]
+
+
+def test_locked_without_text_gives_clear_error(monkeypatch):
+    from app import ocr
+    monkeypatch.setattr(pdf_finder, "download_pdf",
+                        lambda u, t="": (_ for _ in ()).throw(pdf_finder.FetchError("borrow-only")))
+    monkeypatch.setattr(ocr, "fetch_ia_text", lambda ident: "")
+    r = client.post("/api/pdf/download", json={"url": "ia:x", "title": "X"})
+    assert r.status_code == 400 and "borrow-only" in r.json()["detail"]

@@ -30,8 +30,13 @@ def _check_public_url(url: str) -> None:
         raise FetchError(f"Cannot resolve host {p.hostname}") from e
     for info in infos:
         ip = ipaddress.ip_address(info[4][0])
-        if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved:
-            raise FetchError("Refusing to fetch private/internal addresses")
+        if ip.is_loopback or ip.is_link_local or (ip.is_private and not _proxy_range(ip)):
+            raise FetchError(f"Refusing to fetch private/internal address {ip} for {p.hostname}")
+
+
+def _proxy_range(ip) -> bool:
+    """198.18.0.0/15 is used by VPN/proxy apps (fake-IP DNS); allow it."""
+    return ip.version == 4 and ip in ipaddress.ip_network("198.18.0.0/15")
 
 
 def _client() -> httpx.Client:
@@ -78,7 +83,10 @@ def search_free_books(query: str, limit: int = 15) -> list[dict]:
     with _client() as c:
         try:
             r = c.get("https://archive.org/advancedsearch.php", params={
-                "q": f'({query}) AND mediatype:texts AND format:PDF',
+                # skip borrow-only (lending library) books whose files are locked
+                "q": f'({query}) AND mediatype:texts AND format:PDF '
+                     'AND NOT collection:inlibrary AND NOT collection:printdisabled '
+                     'AND NOT collection:lendinglibrary',
                 "fl[]": ["identifier", "title", "creator", "year"],
                 "rows": limit, "output": "json",
             })
@@ -119,9 +127,11 @@ def resolve_ia(identifier: str) -> str:
     """Find the main PDF file of an Internet Archive item."""
     with _client() as c:
         meta = c.get(f"https://archive.org/metadata/{quote(identifier)}").json()
-    pdfs = [f for f in meta.get("files", []) if f.get("name", "").lower().endswith(".pdf")]
+    pdfs = [f for f in meta.get("files", []) if f.get("name", "").lower().endswith(".pdf")
+            and str(f.get("private", "")).lower() != "true"]
     if not pdfs:
-        raise FetchError("No PDF in this Internet Archive item")
+        raise FetchError("This Internet Archive book is borrow-only (locked), so it can't be "
+                         "downloaded. Try another result.")
     best = max(pdfs, key=lambda f: int(f.get("size", 0) or 0))
     return f"https://archive.org/download/{quote(identifier)}/{quote(best['name'])}"
 
@@ -135,6 +145,9 @@ def download_pdf(url: str, title: str = "") -> dict:
     size = 0
     try:
         with _client() as c, c.stream("GET", url) as r:
+            if r.status_code in (401, 403):
+                raise FetchError("The site refused the download (the file is locked or "
+                                 "needs a login). Try another result.")
             r.raise_for_status()
             with open(dest, "wb") as f:
                 first = True

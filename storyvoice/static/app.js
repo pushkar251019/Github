@@ -48,7 +48,11 @@ function renderResults(results) {
         btn.textContent = "✓ Saved"; toast(`Saved “${item.title}”`);
         const go = document.createElement("button"); go.className = "primary"; go.textContent = "🔊 Listen";
         go.onclick = () => openForListening(item.id); btn.after(go);
-      } catch (err) { btn.disabled = false; btn.textContent = "Retry"; toast(err.message); }
+      } catch (err) {
+        btn.disabled = false; btn.textContent = "Retry";
+        const msg = el.querySelector(".err") || el.firstElementChild.appendChild(Object.assign(document.createElement("div"), {className: "status err"}));
+        msg.textContent = err.message;
+      }
     };
     box.appendChild(el);
   });
