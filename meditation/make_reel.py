@@ -1,22 +1,32 @@
 """Instagram Reel: 'A Minute of Stillness' guided breathing meditation for Unseen Depth of Life.
 
-Output: 1080x1920 @30fps H.264 + AAC, loudness-normalised for Instagram (-14 LUFS).
+Output: 1080x1920 @30fps, framed with the brand frame (frame_template.py), H.264 + AAC, loudness-normalised for Instagram (-14 LUFS).
 Pipeline: Piper TTS narration -> timeline -> synth music bed (ducked, breath-synced)
           -> numpy visuals at half-res -> ffmpeg upscale + libass captions/branding.
 Usage: python3 make_reel.py [--preview SECONDS]
 """
 import os, subprocess, sys, wave
 import numpy as np
+from frame_template import window, compose
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TMP = os.environ.get("REEL_TMP", "/tmp/claude-0/reel")
-VOICE = os.environ.get("PIPER_VOICE", "/tmp/claude-0/voice/en-us-lessac-medium.onnx")
+TMP = os.environ.get("REEL_TMP", os.path.join(HERE, ".build"))
+VOICE = os.environ.get("PIPER_VOICE", os.path.join(TMP, "voice", "en-us-lessac-medium.onnx"))
+VOICE_URL = "https://github.com/rhasspy/piper/releases/download/v0.0.2/voice-en-us-lessac-medium.tar.gz"
 OUT = os.path.join(HERE, "unseen_depth_of_life_reel.mp4")
-W, H, FPS, SR = 1080, 1920, 30, 44100
+_win = window()                   # content is rendered at the brand frame's window size
+W, H, FPS, SR = _win["w"], _win["h"], 30, 44100
 VW, VH = W // 2, H // 2          # visuals rendered at half-res, upscaled by ffmpeg
 BRAND = "Unseen Depth of Life"
 INHALE, HOLD, EXHALE = 4.0, 2.0, 5.0
 os.makedirs(TMP, exist_ok=True)
+_fdir = os.path.expanduser("~/.fonts")                            # libass resolves the serif via fontconfig
+if not os.path.exists(os.path.join(_fdir, "CormorantGaramond.ttf")):
+    os.makedirs(_fdir, exist_ok=True)
+    subprocess.run(f"cp {HERE}/fonts/* {_fdir}/ && fc-cache -f", shell=True, check=True)
+if not os.path.exists(VOICE):
+    os.makedirs(os.path.dirname(VOICE), exist_ok=True)
+    subprocess.run(f"curl -sSL {VOICE_URL} | tar xz -C {os.path.dirname(VOICE)}", shell=True, check=True)
 
 # (kind, caption, spoken text / breath lines, pause after)
 SCRIPT = [
@@ -132,19 +142,18 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Cap,Inter SemiBold,58,&H00FFFFFF,&H90E8C8D8,&H70100818,&H96000000,0,0,0,0,100,100,0,0,1,2.2,3,8,110,110,1360,1
-Style: Phase,Inter Medium,30,&H00F2E6D9,&H00FFFFFF,&H80100818,&H00000000,0,0,0,0,100,100,10,0,1,1.2,0,8,0,0,1250,1
-Style: Brand,Cormorant Garamond,52,&H20FFFFFF,&H00FFFFFF,&H90100818,&H00000000,0,1,0,0,100,100,1,0,1,1.4,0,7,64,0,236,1
-Style: Over,Inter Medium,30,&H00E6D3F5,&H00FFFFFF,&H80100818,&H00000000,0,0,0,0,100,100,14,0,1,1.2,0,8,0,0,470,1
-Style: Title,Cormorant Garamond,118,&H00FFFFFF,&H00FFFFFF,&H80100818,&H00000000,0,0,0,0,100,100,0,0,1,1.8,2,8,60,60,520,1
-Style: Sub,Inter Light,38,&H20F2E6D9,&H00FFFFFF,&H80100818,&H00000000,0,0,0,0,100,100,2,0,1,1.2,0,8,60,60,680,1
-Style: End,Cormorant Garamond,92,&H00FFFFFF,&H00FFFFFF,&H80100818,&H00000000,0,1,0,0,100,100,0,0,1,1.8,2,8,60,60,1290,1
-Style: CTA,Inter Medium,40,&H00F2E6D9,&H00FFFFFF,&H80100818,&H00000000,0,0,0,0,100,100,3,0,1,1.2,0,8,60,60,1420,1
+Style: Cap,Inter SemiBold,52,&H00FFFFFF,&H90C8D8F0,&H70100818,&H96000000,0,0,0,0,100,100,0,0,1,2.2,3,8,80,80,935,1
+Style: Phase,Inter Medium,28,&H0060C8FF,&H00FFFFFF,&H80100818,&H00000000,0,0,0,0,100,100,10,0,1,1.2,0,8,0,0,862,1
+Style: Over,Inter Medium,28,&H0060C8FF,&H00FFFFFF,&H80100818,&H00000000,0,0,0,0,100,100,12,0,1,1.2,0,8,0,0,118,1
+Style: Title,Cormorant Garamond,104,&H00FFFFFF,&H00FFFFFF,&H80100818,&H00000000,0,0,0,0,100,100,0,0,1,1.8,2,8,50,50,165,1
+Style: Sub,Inter Light,34,&H20F2E6D9,&H00FFFFFF,&H80100818,&H00000000,0,0,0,0,100,100,2,0,1,1.2,0,8,50,50,300,1
+Style: End,Cormorant Garamond,86,&H00FFFFFF,&H00FFFFFF,&H80100818,&H00000000,0,0,0,0,100,100,0,0,1,1.8,2,8,60,60,880,1
+Style: CTA,Inter Medium,34,&H00F2E6D9,&H00FFFFFF,&H80100818,&H00000000,0,0,0,0,100,100,2,0,1,1.2,0,8,60,60,1000,1
+Style: Sign,Cormorant Garamond,46,&H0060C8FF,&H00FFFFFF,&H80100818,&H00000000,0,1,0,0,100,100,1,0,1,1.2,0,8,60,60,1110,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"""]
 def ev(a, b, style, text, layer=0): ass.append(f"Dialogue: {layer},{ts_ass(a)},{ts_ass(b)},{style},,0,0,0,,{text}")
-ev(0.3, DUR, "Brand", r"{\fad(800,600)}◦ " + BRAND)
 ev(0.5, 7.2, "Over", r"{\fad(600,500)}GUIDED BREATHING MEDITATION")
 ev(0.8, 7.2, "Title", r"{\fad(900,500)\blur0.6}A Minute of Stillness")
 ev(1.4, 7.2, "Sub", r"{\fad(700,500)}breathe with the light")
@@ -154,14 +163,15 @@ for t0 in breaths:
     for off, dur, name in ((0, INHALE, "INHALE"), (INHALE, HOLD, "HOLD"), (INHALE + HOLD, EXHALE, "EXHALE")):
         for k in range(int(dur)):
             ev(t0 + off + k, t0 + off + k + 1, "Phase", f"{{\\fad({150 if k == 0 else 0},{150 if k == dur - 1 else 0})}}{name}   {int(dur) - k}")
-ev(END_CARD, DUR, "End", r"{\fad(900,400)}" + BRAND)
+ev(END_CARD, DUR, "End", r"{\fad(900,400)}The depth was always {\c&H3AA8FF&}within.")
 ev(END_CARD + 0.8, DUR, "CTA", r"{\fad(700,400)}Save this for when you need a pause")
-ev(END_CARD + 1.6, DUR, "CTA", r"{\fad(700,400)\pos(540,1500)}Follow for your daily moment of stillness")
+ev(END_CARD + 1.4, DUR, "CTA", r"{\fad(700,400)\pos(%d,1050)}Follow @unseen_depth_of_life" % (W // 2))
+ev(END_CARD + 2.0, DUR, "Sign", r"{\fad(700,400)}— Unseen Depth")
 open(f"{TMP}/captions.ass", "w").write("\n".join(ass) + "\n")
 
 # ---------------- visuals ----------------
 y, x = np.mgrid[0:VH, 0:VW].astype(np.float32)
-cx, cy = VW / 2, VH * 0.47
+cx, cy = VW / 2, VH * 0.44
 dx, dy = (x - cx) / VW, (y - cy) / VW
 r = np.sqrt(dx ** 2 + dy ** 2); ang = np.arctan2(dy, dx)
 ang_top = ((np.arctan2(dx, -dy)) % (2 * np.pi)) / (2 * np.pi)       # 0 at 12 o'clock, clockwise
@@ -169,14 +179,14 @@ vign = np.clip(1.25 - 0.9 * np.sqrt(((x - VW / 2) / VW) ** 2 + ((y - VH * 0.5) /
 stars = ((rng.random((VH, VW)) > 0.9975) * rng.random((VH, VW))).astype(np.float32)
 NP = 70; px, py = rng.uniform(0, VW, NP), rng.uniform(0, VH, NP); pv = rng.uniform(4, 14, NP); pp = rng.uniform(0, 6.3, NP); pa = rng.uniform(.15, .5, NP)
 sg = np.exp(-(np.mgrid[-4:5, -4:5] ** 2).sum(0) / 4.0).astype(np.float32)
-GOLD, TEAL, VIOLET = (np.array(c, np.float32) for c in ([1.0, .84, .60], [.45, .86, 1.0], [.74, .60, 1.0]))
+GOLD, TEAL, VIOLET = (np.array(c, np.float32) for c in ([1.0, .84, .60], [1.0, .62, .25], [.92, .58, .86]))  # warm palette to sit in the saffron frame
 PHASE_COL = {"INHALE": TEAL, "HOLD": GOLD, "EXHALE": VIOLET}
 
 preview = float(sys.argv[sys.argv.index("--preview") + 1]) if "--preview" in sys.argv else None
 render_dur = min(DUR, preview) if preview else DUR
 vf = (f"scale={W}:{H}:flags=lanczos,ass={TMP}/captions.ass:fontsdir={HERE}/fonts,"
       f"noise=alls=3:allf=t,format=yuv420p")
-out = OUT if not preview else f"{TMP}/preview.mp4"
+out = f"{TMP}/content.mp4"
 ff = subprocess.Popen(["ffmpeg", "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{VW}x{VH}",
     "-r", str(FPS), "-i", "-", "-i", f"{TMP}/mix.wav", "-t", f"{render_dur:.2f}", "-vf", vf,
     "-af", "loudnorm=I=-14:TP=-1.5:LRA=11", "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-profile:v", "high",
@@ -186,7 +196,7 @@ for fi in range(int(render_dur * FPS)):
     s = fi / FPS; b, phase, prog = breath_state(s)
     hue = s / DUR
     base = np.array([.045 + .03 * np.sin(2 * np.pi * hue), .035 + .03 * np.sin(2 * np.pi * hue + 2), .12], np.float32)
-    bg = base * (1.25 - r[..., None] * 1.1) + np.array([.05, .02, .08], np.float32) * np.clip(dy * 1.4, 0, 1)[..., None]
+    bg = base * (1.25 - r[..., None] * 1.1) + np.array([.16, .07, .03], np.float32) * np.clip(dy * 1.3, 0, 1)[..., None]
     R0 = 0.07 + 0.075 * b
     orb = np.exp(-(r / R0) ** 2 * 1.7)
     halo = np.exp(-r / (R0 * 2.0)) * (0.25 + 0.2 * b)
@@ -207,8 +217,9 @@ for fi in range(int(render_dur * FPS)):
     for k in range(NP):
         iy, ix = int(pyy[k]), int(pxx[k]); dust[iy:iy + 9, ix:ix + 9] += sg * pa[k] * (.6 + .4 * np.sin(s + pp[k]))
     img += dust[4:VH + 4, 4:VW + 4, None] * GOLD * .5
-    img *= vign
+    img *= vign * 1.15
     # dim the title card area slightly for legibility; fade in/out
     f = min(1, s / 1.0, (DUR - s) / 1.5) * (1 - 0.35 * np.clip(1 - abs(s - 4) / 3.5, 0, 1) * (s < 7.5))
     ff.stdin.write((np.clip(img * f, 0, 1) * 255).astype(np.uint8).tobytes())
-ff.stdin.close(); ff.wait(); print("wrote", out)
+ff.stdin.close(); ff.wait()
+compose(out, OUT if not preview else f"{TMP}/preview.mp4")
