@@ -116,3 +116,12 @@ Full episode: [YouTube link]
 **Shorts/Reels x4 (OpusClip)**
 - 9:16 reframe tracking speaker; hook text in first 1.5s; captions centre-safe.
 - Faster cuts, SFX on every text pop, B-roll every 3–5s, loopable ending.
+
+---
+## 6. Channel brand lock (from @PSunfilteredpod)
+- Look: black + gold, premium. Captions/text accents = gold (#C9A24D approx), white body text, black backgrounds for text cards.
+- Edit = high-energy pacing, premium black/gold visuals (not neon/meme colours).
+- Thumbnail: dark background, face right, gold serif "PS" feel, 2–4 word white/gold text.
+- Tagline: UNIFY — banner says "Think deeper. Live unfiltered.", About says "Think deeper. Live consciously. Stay unfiltered.", video outro says "Think Deeper. Live Better. Build Wisely." → pick one.
+- Topics confirmed: self-mastery, psychology, money, ambition, discipline, philosophy, spirituality.
+- Fix: "More info" link points to the channel itself → replace with Instagram/LinkedIn.
