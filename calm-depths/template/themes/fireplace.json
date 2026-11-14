@@ -1,16 +1,18 @@
 {
   "theme": "fireplace",
-  "footage": "footage/rainier_hearth.webm",
-  "footage_credit": "\"Mount Rainier Holiday Hearth\" by Mount Rainier National Park, via Wikimedia Commons, licensed CC BY 3.0",
+  "footage": "footage/valleyforge_yule_1080p.mp4",
+  "footage_credit": "\"Valley Forge Yule Log\" by Gregory Purifoy, National Park Service / Valley Forge National Historical Park (public domain, US Government work)",
   "stabilise": false,
   "speed": 1.0,
   "crossfade": 1.5,
   "shots": [
     {
-      "start": 60,
-      "end": 108
+      "start": 30,
+      "end": 78
     }
   ],
-  "grade": "eq=contrast=1.06:brightness=-0.03:saturation=0.92:gamma=0.97,colorbalance=rs=0.03:bs=-0.05:rm=0.06:bm=-0.06:rh=0.05:bh=-0.05",
-  "ambience": "footage"
+  "grade": "eq=contrast=1.04:brightness=0.0:saturation=0.95:gamma=1.06,colorbalance=rs=0.02:bs=-0.04:rm=0.04:bm=-0.05:rh=0.03:bh=-0.04",
+  "ambience": "footage",
+  "logo_scrim": 235,
+  "logo_dim": 95
 }

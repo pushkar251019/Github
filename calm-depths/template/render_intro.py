@@ -75,11 +75,11 @@ def build_caption_track(words):
     return track
 
 
-def gradient_layers():
+def gradient_layers(scrim=140):
     y = np.linspace(0, 1, H)[:, None]
     bottom = np.clip((y - 0.62) / 0.38, 0, 1) ** 1.6 * 150         # caption legibility
     xx, yy = np.meshgrid(np.linspace(-1, 1, W), np.linspace(-1, 1, H))
-    center = np.clip(1 - np.sqrt((xx / 0.9) ** 2 + (yy / 0.75) ** 2), 0, 1) ** 1.2 * 140  # logo legibility
+    center = np.clip(1 - np.sqrt((xx / 0.9) ** 2 + (yy / 0.75) ** 2), 0, 1) ** 1.2 * scrim  # logo legibility
     def lay(a):
         arr = np.zeros((H, W, 4), np.uint8); arr[..., :3] = B.CHARCOAL
         arr[..., 3] = np.broadcast_to(a, (H, W)).astype(np.uint8); return Image.fromarray(arr, "RGBA")
@@ -105,7 +105,9 @@ def main():
     breath_in = (segs[4][0] + VO_START, segs[5][0] + VO_START)     # "Take a slow, deep breath in…" + pause
     breath_out = (segs[5][0] + VO_START, segs[5][1] + VO_START + 0.9)
 
-    grad_bottom, grad_center = gradient_layers()
+    theme = json.load(open(os.path.join(ROOT, "template", "themes", a.theme + ".json")))
+    grad_bottom, grad_center = gradient_layers(theme.get("logo_scrim", 140))
+    dim = Image.new("RGBA", (W, H), B.CHARCOAL + (int(theme.get("logo_dim", 0)),))
     # static brand pieces
     emb = B.emblem(190); desc = B.descriptor(24)
     tag = B.tagline(28); wm = with_alpha(B.watermark(40), 0.72)
@@ -142,7 +144,9 @@ def main():
         kb = fade(t, 1.5, 3.0, vo_end + 0.4, vo_end + 1.6)
         if kb: fr.alpha_composite(with_alpha(grad_bottom, kb))
         kc = max(fade(t, 0.4, 1.6, 6.4, 7.6), fade(t, vo_end - 0.6, vo_end + 0.6, 44.0, 44.9))
-        if kc: fr.alpha_composite(with_alpha(grad_center, kc))
+        if kc:
+            fr.alpha_composite(with_alpha(grad_center, kc))
+            if theme.get("logo_dim"): fr.alpha_composite(with_alpha(dim, kc))
 
         # ---- opening logo (0.6 – 7.6 s)
         if 0.5 < t < 7.8:
