@@ -94,3 +94,25 @@ Self-trust is the most underrated form of confidence.
 
 What's one thing you've been postponing for months?
 Full episode: [YouTube link]
+
+---
+## 5. Editing brief (approved: High-energy creator · 16:9 source · Descript + OpusClip)
+
+**YouTube long-form (Descript)**
+- Remove fillers, retakes, pauses >0.4s; Studio Sound on.
+- Cut rhythm: visual change every 2–4s (jump cut, punch-in 110–125%, B-roll, or text pop).
+- Hard punch-in + whoosh/impact SFX on punchlines:
+  - "Motivation tells you what you want to do. Discipline decides whether you actually do it."
+  - "That's not discipline. That's potentially burnout."
+  - "Knowing and doing are two completely different things."
+  - "A very underrated form of confidence."
+- Bold animated word-by-word Hinglish captions; key words highlighted in accent colour.
+- B-roll/meme inserts: Monday calendar, gym, alarm snooze, Netflix "next episode", Instagram scroll, traffic, book on bedside, phone in other room, piggy bank/investing chart, future-self visual.
+- Section title cards: STEP 1 Stop depending on motivation · STEP 2 Design your environment · STEP 3 Keep small promises.
+- Upbeat music bed, auto-ducked under voice; drops/risers into each step.
+- Branded sting at "Welcome to PS Unfiltered"; end screen with tagline + subscribe.
+- Colour: punchy contrast, warm skin tones, consistent across shots.
+
+**Shorts/Reels x4 (OpusClip)**
+- 9:16 reframe tracking speaker; hook text in first 1.5s; captions centre-safe.
+- Faster cuts, SFX on every text pop, B-roll every 3–5s, loopable ending.
