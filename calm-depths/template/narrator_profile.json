@@ -1,0 +1,22 @@
+{
+  "name": "Calm Depths Narrator",
+  "engine": "Kokoro-82M v1.0 (open source, Apache-2.0) via kokoro-onnx",
+  "model_files": {
+    "model": "https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model.onnx",
+    "voices": "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin"
+  },
+  "voice": "af_heart",
+  "lang": "en-us",
+  "speed": 0.82,
+  "pauses_after_sentence_s": [
+    0.85,
+    0.8,
+    0.95,
+    0.9,
+    1.7,
+    1.15,
+    0.9
+  ],
+  "post": "highpass 70Hz, +1.5dB @200Hz, -1.5dB @3.5kHz, light de-ess, 2.5:1 compression, loudnorm -16 LUFS / -1.5 dBTP, 48 kHz 24-bit",
+  "locked": "Never change voice, speed, lang or post chain. The master WAV in assets/voice is reused as-is for every intro."
+}

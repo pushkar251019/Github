@@ -1,0 +1,16 @@
+{
+  "theme": "ocean",
+  "footage": "footage/nabeul_sunset_beach.webm",
+  "footage_credit": "\"Coucher de soleil sur la plage de Nabeul, 10 novembre 2017\" via Wikimedia Commons, licensed CC BY 3.0",
+  "stabilise": true,
+  "speed": 0.55,
+  "crossfade": 1.5,
+  "shots": [
+    {"start": 24.0, "end": 28.5},
+    {"start": 0.5,  "end": 9.0},
+    {"start": 48.5, "end": 56.0},
+    {"start": 15.0, "end": 22.0}
+  ],
+  "grade": "eq=contrast=1.06:brightness=-0.055:saturation=0.82:gamma=0.96,colorbalance=rs=0.05:gs=0.0:bs=-0.06:rm=0.06:gm=0.01:bm=-0.05:rh=0.05:gh=0.02:bh=-0.04,curves=master='0/0.03 0.25/0.21 0.6/0.6 1/0.93'",
+  "ambience": "synth:ocean"
+}
