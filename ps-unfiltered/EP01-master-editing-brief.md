@@ -20,3 +20,4 @@ Rule: never fabricate footage or dialogue. Every edit must improve clarity, rete
 - Lighting: global grade — brighter exposure, lifted whites, gentle contrast, natural skin, slight warmth; bright, clean tone.
 - Voice: polish with full-track speech enhancement (noise/echo removal, levelled).
 - Resolution: export at source resolution (4K if source is 4K), max 30 fps.
+- SCOPE CHANGE: No Reels/Shorts. Deliverable = one fully edited 16:9 YouTube video (+ .srt and thumbnail concept as support).
