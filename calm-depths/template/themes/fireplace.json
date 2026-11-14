@@ -1,24 +1,16 @@
 {
   "theme": "fireplace",
-  "footage": "footage/REPLACE_WITH_FIREPLACE_CLIP.mp4",
-  "footage_credit": "Add source + licence (CC0, CC BY, or your own footage)",
+  "footage": "footage/rainier_hearth.webm",
+  "footage_credit": "\"Mount Rainier Holiday Hearth\" by Mount Rainier National Park, via Wikimedia Commons, licensed CC BY 3.0",
   "stabilise": false,
   "speed": 1.0,
   "crossfade": 1.5,
   "shots": [
     {
-      "start": 0,
-      "end": 16
-    },
-    {
-      "start": 16,
-      "end": 32
-    },
-    {
-      "start": 32,
-      "end": 48
+      "start": 60,
+      "end": 108
     }
   ],
-  "grade": "eq=contrast=1.08:brightness=-0.04:saturation=0.9,colorbalance=rm=0.08:bm=-0.08:rh=0.06:bh=-0.05",
-  "ambience": "synth:fireplace"
+  "grade": "eq=contrast=1.06:brightness=-0.03:saturation=0.92:gamma=0.97,colorbalance=rs=0.03:bs=-0.05:rm=0.06:bm=-0.06:rh=0.05:bh=-0.05",
+  "ambience": "footage"
 }
