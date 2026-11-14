@@ -14,3 +14,9 @@ Tagline: Think Deeper. Live Better. Build Wisely.
 10. QC: full watch, cut check, no clipped words, subtitle accuracy, consistent colour/audio, narrative coherent.
 11. Deliverables: (1) 16:9 full video, 4K if source supports; (2) clean dialogue mix; (3) .srt; (4) three 9:16 Shorts; (5) one thumbnail concept.
 Rule: never fabricate footage or dialogue. Every edit must improve clarity, retention, emotion or understanding.
+
+## Update (user request)
+- Background: clean up the real white wall (brighten, even out) — no replacement.
+- Lighting: global grade — brighter exposure, lifted whites, gentle contrast, natural skin, slight warmth; bright, clean tone.
+- Voice: polish with full-track speech enhancement (noise/echo removal, levelled).
+- Resolution: export at source resolution (4K if source is 4K), max 30 fps.
