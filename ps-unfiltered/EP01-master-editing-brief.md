@@ -21,3 +21,4 @@ Rule: never fabricate footage or dialogue. Every edit must improve clarity, rete
 - Voice: polish with full-track speech enhancement (noise/echo removal, levelled).
 - Resolution: export at source resolution (4K if source is 4K), max 30 fps.
 - SCOPE CHANGE: No Reels/Shorts. Deliverable = one fully edited 16:9 YouTube video (+ .srt and thumbnail concept as support).
+- LOOK REFERENCE: refs/EP01-look-reference.webp — bright, soft white/light-grey wall (slightly cool), soft falloff to edges, subtle warm peach glow from lower-left, clean natural skin, black tee for contrast, chest-up centred. Match this; improve where possible (cleaner, even wall, crisper detail), without replacing the real background.
