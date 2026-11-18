@@ -1,0 +1,32 @@
+feature,area,priority,original,clone,notes
+Sign up with email or Google,onboarding,must,yes,no,
+Upload one photo to create a clone,clone,must,yes,no,face detection check
+Record or upload voice sample,clone,must,yes,no,30-60s sample
+Voice consent capture,clone,must,yes,no,legal requirement; store consent_at
+Voice cloning,voice,must,yes,no,Chatterbox/F5-TTS free; ElevenLabs paid
+Script editor,video,must,yes,no,
+Lip-synced talking video from one photo,video,must,yes,no,LivePortrait/SadTalker/Hallo
+Aspect ratios 9:16 1:1 16:9,video,must,yes,no,
+Render queue with progress,video,must,yes,no,
+Download MP4 up to 1080p,export,must,yes,no,
+Watermark on free tier,billing,must,yes,no,
+Per-video quota per plan,billing,must,yes,no,
+Per-line emotion detection,voice,should,yes,no,Claude tags lines; differentiator
+Emotion-matched voice delivery,voice,should,yes,no,
+40+ languages,voice,should,yes,no,
+AI ad script from URL or brief,script,should,yes,no,
+Stock AI actor library,actors,should,yes,no,own consented/synthetic actors only
+Variations (hooks/backgrounds/languages),video,should,yes,no,
+Stripe subscriptions,billing,should,yes,no,
+Delete clone and raw footage,privacy,should,yes,no,
+Auto captions,export,should,unknown,no,our addition via Whisper
+Background scenes,video,could,yes,no,
+Gestures and expressions,video,could,yes,no,
+4K export,export,could,yes,no,beta in original
+Trim merge add-text utilities,editor,could,yes,no,FFmpeg
+Direct publish to Instagram/TikTok,export,could,no,no,our addition via Postiz
+Brand kit,brand,could,unknown,no,
+CreatorKit stock actors,actors,skip,yes,skip,licensed real people owned by CreatorKit
+Done-for-you services,services,skip,yes,skip,human service not software
+Shopify app listing,integrations,skip,yes,skip,their partner listing
+Product photo generator,images,skip,yes,skip,separate product; out of slice
