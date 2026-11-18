@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WiFiLog</title>
+<style>
+:root{--bg:#0f1420;--card:#171e2e;--line:#26304a;--tx:#e6eaf2;--mut:#8d97ad;--ok:#3ecf8e;--warn:#f5a524;--bad:#f0506e;--acc:#5b8cff}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx)}
+header{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+h1{font-size:20px;margin:0}.mut{color:var(--mut)}a{color:var(--acc)}
+main{padding:18px 22px;display:grid;gap:18px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px}.stat b{display:block;font-size:24px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.card h2{font-size:15px;margin:0;padding:12px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.scroll{max-height:420px;overflow:auto}table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mut);font-weight:500;position:sticky;top:0;background:var(--card)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}.on{background:var(--ok)}.off{background:#555}
+.tag{font-size:11px;padding:2px 7px;border-radius:99px;border:1px solid}.new{color:var(--bad);border-color:var(--bad)}.trust{color:var(--ok);border-color:var(--ok)}
+.k-new{color:var(--bad)}.k-joined{color:var(--ok)}.k-left{color:var(--mut)}.k-ip{color:var(--warn)}
+input[type=text]{background:#0c111c;border:1px solid var(--line);color:var(--tx);border-radius:6px;padding:4px 7px;width:140px}
+button{background:var(--acc);color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer}button.sec{background:transparent;border:1px solid var(--line);color:var(--tx)}
+code{background:#0c111c;padding:1px 5px;border-radius:4px}.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px}
+details{padding:12px 14px}ol{margin:6px 0 0 18px;padding:0}
+</style></head><body>
+<header><h1>📶 WiFiLog</h1><span class="mut" id="info"></span><span style="flex:1"></span>
+<input type="text" id="filter" placeholder="Filter…"><button id="scan">Scan now</button></header>
+<main>
+<div class="stats" id="stats"></div>
+<div class="card"><h2>Devices on your WiFi <span><a href="/devices.csv">CSV</a></span></h2><div class="scroll"><table>
+<thead><tr><th>Status</th><th>Name / label</th><th>IP</th><th>MAC</th><th>First seen</th><th>Last seen</th><th>Trusted</th></tr></thead>
+<tbody id="dev"></tbody></table></div></div>
+<div class="card"><h2>Activity log <a href="/events.csv">CSV</a></h2><div class="scroll"><table>
+<thead><tr><th>Time</th><th>Event</th><th>Detail</th></tr></thead><tbody id="ev"></tbody></table></div></div>
+<div class="card"><h2>Router logs (syslog) <a href="/syslog.csv">CSV</a></h2><div class="scroll"><table>
+<thead><tr><th>Time</th><th>From</th><th>Message</th></tr></thead><tbody id="sys"></tbody></table></div>
+<details id="howto"><summary><b>How to send your router's own logs here</b></summary><ol id="steps"></ol></details></div>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const t=s=>s?s.replace("T"," "):"";
+let editing=false;
+async function load(){
+  if(editing)return;
+  const s=await (await fetch("/api/state")).json(), f=$("filter").value.toLowerCase(), I=s.info;
+  const m=r=>!f||JSON.stringify(r).toLowerCase().includes(f);
+  $("info").innerHTML=`Network <code>${esc(I.subnet)}</code> · this PC <code>${esc(I.ip)}</code> · router <a href="http://${esc(I.gateway)}" target="_blank">${esc(I.gateway)}</a> · scan every ${I.interval}s`;
+  const on=s.devices.filter(d=>d.online).length, unk=s.devices.filter(d=>!d.trusted).length;
+  $("stats").innerHTML=[["Online now",on],["Devices ever seen",s.devices.length],["Not yet trusted",unk],["Router log lines",s.syslog.length]]
+    .map(([k,v])=>`<div class="stat"><span class="mut">${k}</span><b>${v}</b></div>`).join("");
+  $("dev").innerHTML=s.devices.filter(m).map(d=>`<tr>
+    <td><span class="dot ${d.online?"on":"off"}"></span>${d.online?"online":"offline"}</td>
+    <td><input type="text" value="${esc(d.label)}" placeholder="${esc(d.hostname||"unknown")}" data-mac="${esc(d.mac)}" class="lbl">
+      ${d.trusted?'':'<span class="tag new">unknown</span>'}<div class="mut mono">${esc(d.hostname)}</div></td>
+    <td class="mono">${esc(d.ip)}</td><td class="mono">${esc(d.mac)}${parseInt(d.mac.slice(0,2),16)&2?'<div class="mut">private MAC</div>':''}</td>
+    <td>${t(d.first_seen)}</td><td>${t(d.last_seen)}</td>
+    <td><input type="checkbox" class="tr" data-mac="${esc(d.mac)}" ${d.trusted?"checked":""}></td></tr>`).join("");
+  $("ev").innerHTML=s.events.filter(m).map(e=>`<tr><td>${t(e.ts)}</td><td class="k-${esc(e.kind)}">${esc(e.kind)}</td><td>${esc(e.detail)}</td></tr>`).join("")
+    ||'<tr><td colspan=3 class="mut">First scan running…</td></tr>';
+  $("sys").innerHTML=s.syslog.filter(m).map(l=>`<tr><td>${t(l.ts)}</td><td class="mono">${esc(l.source)}</td><td class="mono">${esc(l.message)}</td></tr>`).join("")
+    ||'<tr><td colspan=3 class="mut">No router logs yet — see the steps below.</td></tr>';
+  $("steps").innerHTML=`<li>Open your router admin page: <a href="http://${esc(I.gateway)}" target="_blank">http://${esc(I.gateway)}</a> (the login is often on a sticker on the router).</li>
+    <li>Find <b>System Log</b> / <b>Remote Log</b> / <b>Syslog</b> (usually under System Tools, Administration or Advanced).</li>
+    <li>Enable remote logging. Server = <code>${esc(I.ip)}</code>, port = <code>${I.syslog_port||514}</code>, then save.</li>
+    <li>If your router only allows port 514, restart WiFiLog with <code>--syslog-port 514</code> (needs admin/sudo).</li>
+    <li>Allow Python through your firewall for UDP ${I.syslog_port||514} if Windows/macOS asks.</li>`;
+  if(!s.syslog.length)$("howto").open=true;
+  document.querySelectorAll(".lbl,.tr").forEach(el=>{
+    el.onfocus=()=>editing=true;
+    el.onchange=el.onblur=()=>{editing=false;save(el.dataset.mac)};
+  });
+}
+async function save(mac){
+  const lbl=document.querySelector(`.lbl[data-mac="${mac}"]`).value, tr=document.querySelector(`.tr[data-mac="${mac}"]`).checked;
+  await fetch("/api/device",{method:"POST",body:JSON.stringify({mac,label:lbl,trusted:tr})});
+}
+$("scan").onclick=async()=>{await fetch("/api/scan",{method:"POST"});$("scan").textContent="Scanning…";setTimeout(()=>{$("scan").textContent="Scan now";load()},12000)};
+$("filter").oninput=load;
+load();setInterval(load,5000);
+</script></body></html>
