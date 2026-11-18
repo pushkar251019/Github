@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<title>SweepGuard – Hidden Device Detector</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg">
+<style>
+:root{--bg:#0b0f14;--card:#121922;--line:#1f2a36;--tx:#e6edf3;--mut:#8b9bb0;--acc:#22d3ee;--bad:#f43f5e;--warn:#f59e0b;--ok:#22c55e}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--tx);padding-bottom:env(safe-area-inset-bottom)}
+header{padding:16px 16px 8px;display:flex;align-items:center;gap:10px}
+header img{width:34px;height:34px}
+header h1{font-size:19px;margin:0}
+header small{color:var(--mut);display:block;font-weight:400;font-size:12px}
+nav{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;position:sticky;top:0;background:var(--bg);z-index:5;border-bottom:1px solid var(--line)}
+nav button{flex:0 0 auto;background:var(--card);color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font:inherit;font-size:13px}
+nav button.on{color:#001018;background:var(--acc);border-color:var(--acc);font-weight:600}
+main{padding:12px;max-width:760px;margin:auto}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.card h2{font-size:16px;margin:0 0 6px}
+.card p,.card li{color:var(--mut);margin:6px 0}
+.btn{background:var(--acc);color:#001018;border:0;border-radius:10px;padding:11px 16px;font:inherit;font-weight:600;cursor:pointer}
+.btn.sec{background:transparent;color:var(--tx);border:1px solid var(--line)}
+.btn:disabled{opacity:.4}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.big{font-size:44px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+.unit{font-size:14px;color:var(--mut);font-weight:400}
+.meter{height:14px;background:#0a1118;border-radius:8px;overflow:hidden;border:1px solid var(--line);margin:10px 0}
+.meter>div{height:100%;width:0;background:linear-gradient(90deg,var(--ok),var(--warn),var(--bad));transition:width .1s}
+canvas,video{width:100%;border-radius:10px;background:#000;display:block}
+.vwrap{position:relative}
+.vwrap canvas{position:absolute;inset:0;height:100%;background:transparent}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line);color:var(--mut)}
+.pill.bad{color:var(--bad);border-color:var(--bad)}.pill.warn{color:var(--warn);border-color:var(--warn)}.pill.ok{color:var(--ok);border-color:var(--ok)}
+.status{font-size:13px;color:var(--mut);margin-top:8px;min-height:1.2em}
+.dev{display:flex;justify-content:space-between;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.dev:last-child{border:0}
+.dev b{display:block}.dev small{color:var(--mut)}
+label.ck{display:flex;gap:10px;align-items:flex-start;padding:7px 0;color:var(--tx)}
+label.ck input{margin-top:3px;width:18px;height:18px;accent-color:var(--acc)}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.warnbox{border-left:3px solid var(--warn);padding-left:10px}
+a{color:var(--acc)}
+</style>
+</head>
+<body>
+<header><img src="icon.svg" alt=""><h1>SweepGuard<small>Counter-surveillance sweep for hidden mics, cameras & trackers</small></h1></header>
+<nav id="tabs">
+  <button data-t="home" class="on">Start</button>
+  <button data-t="mag">Magnetic</button>
+  <button data-t="lens">Lens finder</button>
+  <button data-t="ir">IR / night-vision</button>
+  <button data-t="ble">Bluetooth</button>
+  <button data-t="audio">RF buzz</button>
+  <button data-t="check">Checklist</button>
+</nav>
+<main>
+
+<!-- HOME -->
+<section id="home" class="on">
+  <div class="card">
+    <h2>How to sweep a room</h2>
+    <p>No single phone test catches everything. Work through the tools in order. Each one catches a different kind of device:</p>
+    <ol>
+      <li><b>Magnetic</b>: finds powered electronics and batteries hidden in walls, smoke detectors, chargers and so on.</li>
+      <li><b>Lens finder</b>: finds pinhole camera lenses by the light they reflect back.</li>
+      <li><b>IR / night-vision</b>: shows infrared LEDs on cameras that film in the dark.</li>
+      <li><b>Bluetooth</b>: lists nearby BLE devices and flags trackers (AirTag, Tile, SmartTag) and unnamed devices.</li>
+      <li><b>RF buzz</b>: listens for the 217 Hz "GSM buzz" that SIM-card bugs make, and for ultrasonic beacons.</li>
+      <li><b>Checklist</b>: a physical search of the places devices are usually hidden.</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h2>Device support</h2>
+    <div id="support"></div>
+  </div>
+  <div class="card warnbox">
+    <h2>Honest limits</h2>
+    <p>A phone has no wideband radio receiver, so <b>no app can directly detect every wireless microphone</b>, especially analog VHF/UHF bugs or devices that record and send nothing. This app uses the sensors your phone has to raise the odds of finding them. For a full radio sweep, plug a ~$30 <b>RTL-SDR</b> dongle into a laptop and scan 24 MHz–1.7 GHz with free tools (SDR#, SDR++, or <code>rtl_power</code>).</p>
+    <p>If you think you're being watched by someone who could harm you, don't remove the device yourself. Contact the police or a support service first, because removing it can warn the person.</p>
+  </div>
+</section>
+
+<!-- MAGNETIC -->
+<section id="mag">
+  <div class="card">
+    <h2>Magnetic / electronics detector</h2>
+    <p>Calibrate away from metal, then move the top of your phone slowly (5–10 cm away) over outlets, vents, clocks, smoke detectors, USB chargers, lamps and furniture. A sharp spike where nothing obvious should be is worth a closer look.</p>
+    <div class="row"><button class="btn" id="magStart">Start</button><button class="btn sec" id="magCal" disabled>Calibrate (zero)</button><label class="row"><input type="checkbox" id="magSound" checked> Sound</label></div>
+    <div style="margin-top:14px"><span class="big" id="magVal">--</span> <span class="unit">µT change</span> <span id="magFlag"></span></div>
+    <div class="meter"><div id="magBar"></div></div>
+    <div class="unit">Total field: <span id="magTot">--</span> µT · Earth's field is normally 25–65 µT</div>
+    <canvas id="magChart" height="120" style="margin-top:10px"></canvas>
+    <div class="status" id="magStatus"></div>
+  </div>
+</section>
+
+<!-- LENS -->
+<section id="lens">
+  <div class="card">
+    <h2>Pinhole camera lens finder</h2>
+    <p>Turn off the room lights. Start the scan (the flashlight turns on if your phone allows it, otherwise hold a second torch next to the camera). Sweep slowly. Camera lenses reflect light straight back as a <b>small, sharp, steady glint</b>, often blue or purple. Red circles mark candidate spots. Move a little: a real lens stays bright, a random reflection flickers away.</p>
+    <div class="row"><button class="btn" id="lensStart">Start scan</button><button class="btn sec" id="lensTorch" disabled>Torch</button></div>
+    <label style="display:block;margin-top:10px" class="unit">Sensitivity <input type="range" id="lensSens" min="200" max="254" value="245"></label>
+    <div class="vwrap" style="margin-top:10px"><video id="lensVid" playsinline muted></video><canvas id="lensOv"></canvas></div>
+    <div class="status" id="lensStatus"></div>
+  </div>
+</section>
+
+<!-- IR -->
+<section id="ir">
+  <div class="card">
+    <h2>Infrared / night-vision camera check</h2>
+    <p>Cameras that film in the dark light the room with infrared LEDs your eyes can't see, but many phone cameras can. <b>Test first:</b> point a TV remote at the camera and press a button. If you see the LED flash, that camera sees IR. Front cameras often see it better than rear ones.</p>
+    <p>Then, in a dark room, sweep the room. Glowing purple or white dots, often in a ring, mean IR LEDs.</p>
+    <div class="row"><button class="btn" id="irFront">Front camera</button><button class="btn sec" id="irBack">Rear camera</button></div>
+    <div class="vwrap" style="margin-top:10px"><video id="irVid" playsinline muted></video><canvas id="irOv"></canvas></div>
+    <div class="status" id="irStatus"></div>
+  </div>
+</section>
+
+<!-- BLE -->
+<section id="ble">
+  <div class="card">
+    <h2>Bluetooth device &amp; tracker scan</h2>
+    <p>Lists nearby Bluetooth Low Energy devices with signal strength. It flags trackers (AirTag/Find My, Tile, Samsung SmartTag, Chipolo) and devices that hide their name. Walk around: a <b>stronger signal (closer to 0 dBm)</b> means you're getting closer.</p>
+    <div class="row"><button class="btn" id="bleScan">Live scan</button><button class="btn sec" id="blePick">Pick a device</button><button class="btn sec" id="bleStop" disabled>Stop</button></div>
+    <div class="status" id="bleStatus"></div>
+    <div id="bleList" style="margin-top:8px"></div>
+  </div>
+  <div class="card">
+    <h2>Also check</h2>
+    <p><b>iPhone:</b> Settings → Privacy &amp; Security → Safety Check, and Find My → Items → "Identify Found Item". iOS warns you about unknown AirTags travelling with you.</p>
+    <p><b>Android:</b> Settings → Safety &amp; emergency → Unknown tracker alerts → <i>Scan now</i>.</p>
+    <p><b>Wi-Fi cameras:</b> use the free <b>Fing</b> app on the room's Wi-Fi and look for devices named like "IPCam", "Espressif", "HiSilicon" or unknown makers.</p>
+  </div>
+</section>
+
+<!-- AUDIO -->
+<section id="audio">
+  <div class="card">
+    <h2>RF buzz &amp; ultrasonic listener</h2>
+    <p>GSM/SIM-card bugs make a "dit-dit-dit" buzz at <b>217 Hz</b> in nearby speakers and microphones when they transmit. Some trackers use <b>ultrasonic beacons (18–22 kHz)</b>. Hold the phone near suspicious objects in a quiet room. To provoke a bug, call or text the room's number, or stay quiet for a while then talk, since many bugs are voice-activated.</p>
+    <div class="row"><button class="btn" id="audStart">Start listening</button></div>
+    <div class="row" style="margin-top:12px;gap:16px">
+      <div>217 Hz buzz <span id="gsmFlag" class="pill">--</span></div>
+      <div>Ultrasonic <span id="usFlag" class="pill">--</span></div>
+    </div>
+    <canvas id="audChart" height="160" style="margin-top:10px"></canvas>
+    <div class="status" id="audStatus"></div>
+  </div>
+</section>
+
+<!-- CHECKLIST -->
+<section id="check">
+  <div class="card">
+    <h2>Physical sweep checklist</h2>
+    <p>Most hidden devices are found by hand. Ticks are saved on this device.</p>
+    <div id="ckList"></div>
+    <div class="row" style="margin-top:10px"><span id="ckProg" class="pill">0%</span><button class="btn sec" id="ckReset">Reset</button></div>
+  </div>
+</section>
+
+</main>
+<script src="app.js"></script>
+</body>
+</html>
