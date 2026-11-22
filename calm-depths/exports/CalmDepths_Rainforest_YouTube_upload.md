@@ -1,9 +1,9 @@
 # Rain in the forest video: YouTube upload sheet
 
-**Thumbnail:** `thumbnails/CalmDepths_Thumb_Rainforest.jpg` (says "1 HOUR"; ask for a 2 or 3 HOUR version if you make it longer)
+**Thumbnail:** `thumbnails/CalmDepths_Thumb_Rainforest.jpg`
 
 ## Title
-Heavy Rain in the Forest 🌧️ | Relaxing Rain Sounds for Sleep, Focus & Stress Relief | 1 Hour
+Heavy Rain in the Forest 🌧️ | Relaxing Rain Sounds for Sleep, Focus & Stress Relief
 
 ## Description
 Escape the noise. Find your calm. 🌧️
