@@ -19,6 +19,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("main"); ap.add_argument("out"); ap.add_argument("--intro")
     ap.add_argument("--xfade", type=float, default=1.5)
+    ap.add_argument("--crf", type=int, default=18)
     ap.add_argument("--sub-first", type=float, help="seconds into the main video for the first subscribe (multiple of 5)")
     ap.add_argument("--sub-every", type=float, help="repeat interval in seconds (multiple of 5), e.g. 600")
     a = ap.parse_args()
@@ -44,7 +45,7 @@ def main():
         vout, aout = "[v]", "[a]"
         total += off
     subprocess.run(["ffmpeg", "-y", *inputs, "-filter_complex", ";".join(fc), "-map", vout, "-map", aout, "-t", f"{total:.3f}",
-                    "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-r", "30",
+                    "-c:v", "libx264", "-preset", "medium", "-crf", str(a.crf), "-pix_fmt", "yuv420p", "-r", "30",
                     "-c:a", "aac", "-b:a", "256k", "-ar", "48000", "-movflags", "+faststart", a.out], check=True)
 
 
