@@ -19,16 +19,20 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("main"); ap.add_argument("out"); ap.add_argument("--intro")
     ap.add_argument("--xfade", type=float, default=1.5)
+    ap.add_argument("--sub-first", type=float, help="seconds into the main video for the first subscribe (multiple of 5)")
+    ap.add_argument("--sub-every", type=float, help="repeat interval in seconds (multiple of 5), e.g. 600")
     a = ap.parse_args()
     wm = os.path.join(BR, "CalmDepths_Watermark_transparent.png")
-    cyc = os.path.join(BR, "CalmDepths_Subscribe_60s_cycle_alpha.mov")
+    sparse = a.sub_first is not None and a.sub_every is not None
+    cyc = os.path.join(BR, "CalmDepths_Subscribe_5s_alpha.mov" if sparse else "CalmDepths_Subscribe_60s_cycle_alpha.mov")
+    en = f":enable='gte(t,{a.sub_first})*lt(mod(t-{a.sub_first},{a.sub_every}),5)'" if sparse else ""
     norm = "scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2,fps=30,format=yuv420p"
     # main video gets the watermark + periodic subscribe (clock starts at main video start)
     fc = [f"[0:v]{norm}[m0]",
           "[1:v]format=rgba,colorchannelmixer=aa=0.72[wm]",
           "[m0][wm]overlay=W-w-48:H-h-40:shortest=1:format=auto[m1]",
           "[2:v]format=rgba[sb]",
-          "[m1][sb]overlay=(W-w)/2:H-h-70:shortest=1:format=auto[mv]",
+          f"[m1][sb]overlay=(W-w)/2:H-h-70:shortest=1:format=auto{en}[mv]",
           "[0:a]aresample=48000[ma]"]
     inputs = ["-i", a.main, "-loop", "1", "-i", wm, "-stream_loop", "-1", "-i", cyc]
     vout, aout = "[mv]", "[ma]"
