@@ -28,10 +28,14 @@ def main():
     ap.add_argument("--bg", required=True); ap.add_argument("--amb", required=True)
     ap.add_argument("--out", required=True); ap.add_argument("--scrim", type=int, default=150)
     ap.add_argument("--dim", type=int, default=40)
+    ap.add_argument("--voice-dir", default=VDIR, help="folder with CalmDepths_Narrator_Short_v2.wav, words.json, optional captions.json")
     a = ap.parse_args()
-    words = json.load(open(os.path.join(VDIR, "words.json")))
+    vdir = a.voice_dir
+    words = json.load(open(os.path.join(vdir, "words.json")))
+    cfile = os.path.join(vdir, "captions.json")
+    lines = json.load(open(cfile)) if os.path.exists(cfile) else CAPTIONS
     caps = []
-    for i0, i1, runs in CAPTIONS:
+    for i0, i1, runs in lines:
         caps.append([words[i0][1] + VO_START - 0.12, words[i1][2] + VO_START + 0.35, caption_image(runs)])
     for k in range(len(caps) - 1):
         caps[k][1] = min(caps[k][1] + 0.25, caps[k + 1][0] - 0.04)
@@ -43,7 +47,7 @@ def main():
     yt = B.yt_play(50); sub = B.subscribe_button("subscribe", 60); subd = B.subscribe_button("subscribed", 60)
     bell = B.bell(42)
 
-    vo = os.path.join(VDIR, "CalmDepths_Narrator_Short_v2.wav")
+    vo = os.path.join(vdir, "CalmDepths_Narrator_Short_v2.wav")
     fc = (f"[2:a]aresample=48000,adelay={int(VO_START*1000)}|{int(VO_START*1000)},apad,atrim=0:{DUR},asplit[vo][sc];"
           f"[1:a]aresample=48000,atrim=0:{DUR},volume=0.85[ambv];"
           f"[ambv][sc]sidechaincompress=threshold=0.03:ratio=3:attack=60:release=700[ambd];"
