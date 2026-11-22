@@ -29,6 +29,11 @@ Settle in beside a gently crackling fireplace. Let the warm glow and soft, natur
 —
 Fireplace footage: "Valley Forge Yule Log" by Gregory Purifoy, National Park Service / Valley Forge National Historical Park (public domain). Not endorsed by the National Park Service.
 
+⏱ Chapters
+0:00 Welcome
+0:43 Crackling Fireplace
+16:00 Glowing Embers
+
 #fireplacesounds #cracklingfire #sleepsounds #relaxingsounds #calmdepths
 
 ## Tags
@@ -38,4 +43,4 @@ fireplace sounds, crackling fire, fireplace ambience, cozy fireplace, fire sound
 - Category: People & Blogs (or Entertainment)
 - Made for kids: No
 - Altered or synthetic content: the intro narrator is an AI voice of no real person, which YouTube's rules generally don't require you to label. Ticking "Yes" is the safe choice if unsure.
-- Chapters: 0:00 Welcome · 0:43 Fireplace
+- Chapters (YouTube needs 3+): 0:00 Welcome · 0:43 Crackling Fireplace · 16:00 Glowing Embers
