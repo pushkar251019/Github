@@ -87,21 +87,34 @@ function Get-CleanName($file) {
   return "$base$e"
 }
 
-# Collect files: everything at the top level, plus anything inside an existing "raw ..." folder.
+# Existing folders we recognise and fold into the new structure (name pattern -> new folder).
+$folderMap = [ordered]@{
+  '(?i)raw'                    = $F.RawVideo
+  '(?i)intro'                  = $F.Intros
+  '(?i)thumb'                  = $F.Thumbnails
+  '(?i)upload|final|export'    = $F.Finals
+  '(?i)overlay|subscribe'      = $F.Overlays
+  '(?i)brand|logo'             = $F.Brand
+  '(?i)voice|narrat'           = $F.Voice
+  '(?i)audio|sound|music|sfx'  = $F.RawAudio
+}
 $known = @($F.Values)
-$files = @(Get-ChildItem -LiteralPath $Root -File | Where-Object { $_.Name -ne "_organize_log.csv" -and $_.Name -notlike "Organize-CalmDepth*.ps1" })
-$rawDirs = @(Get-ChildItem -LiteralPath $Root -Directory | Where-Object { $_.Name -match '(?i)(^|[\s_\-])raw([\s_\-]|$)' -and $known -notcontains $_.Name })
-foreach ($d in $rawDirs) { $files += Get-ChildItem -LiteralPath $d.FullName -File -Recurse }
-# Other loose folders (not ours, not raw) are reported, not touched.
-$rawNames = @($rawDirs | ForEach-Object { $_.Name })
-$otherDirs = @(Get-ChildItem -LiteralPath $Root -Directory | Where-Object { $known -notcontains $_.Name -and $rawNames -notcontains $_.Name })
+$files = @(Get-ChildItem -LiteralPath $Root -File | Where-Object { $_.Name -ne "_organize_log.csv" -and $_.Name -notlike "Organize-CalmDepth*" })
+$srcDirs = @(); $otherDirs = @()
+foreach ($d in Get-ChildItem -LiteralPath $Root -Directory) {
+  if ($known -contains $d.Name) { continue }
+  $hit = $null; foreach ($k in $folderMap.Keys) { if ($d.Name -match $k) { $hit = $folderMap[$k]; break } }
+  if ($hit) { $srcDirs += [pscustomobject]@{ Dir = $d; Target = $hit }; $files += Get-ChildItem -LiteralPath $d.FullName -File -Recurse }
+  else { $otherDirs += $d }
+}
 
 $plan = foreach ($f in $files) {
-  $t = Get-Target $f
-  $inRaw = $rawDirs | Where-Object { $f.FullName.StartsWith($_.FullName + "\") }
-  if ($inRaw -and $videoExt -contains $f.Extension.ToLower()) { $t = $F.RawVideo }
-  elseif ($inRaw -and $audioExt -contains $f.Extension.ToLower()) { $t = $F.RawAudio }
-  elseif ($inRaw) { $t = $F.RawVideo }   # anything else found in a raw folder stays with the raw footage
+  $t = Get-Target $f; $e = $f.Extension.ToLower()
+  $src = $srcDirs | Where-Object { $f.FullName.StartsWith($_.Dir.FullName + "\") } | Select-Object -First 1
+  if ($src) {
+    if ($src.Target -eq $F.RawVideo) { $t = if ($audioExt -contains $e) { $F.RawAudio } else { $F.RawVideo } }
+    elseif ($t -eq $F.RawVideo -or $t -eq $F.RawAudio -or $t -eq $F.Other) { $t = $src.Target }   # folder name wins over the generic guess
+  }
   [pscustomobject]@{ From = $f.FullName; To = Join-Path (Join-Path $Root $t) (Get-CleanName $f) }
 }
 
@@ -136,9 +149,9 @@ foreach ($p in $plan) {
   $done += $p
 }
 $done | Export-Csv -LiteralPath $Log -NoTypeInformation -Append
-# remove raw folders that are now empty
-foreach ($d in $rawDirs) {
-  if (-not (Get-ChildItem -LiteralPath $d.FullName -Recurse -File)) { Remove-Item -LiteralPath $d.FullName -Recurse }
+# remove the old folders that are now empty
+foreach ($s in $srcDirs) {
+  if (-not (Get-ChildItem -LiteralPath $s.Dir.FullName -Recurse -File)) { Remove-Item -LiteralPath $s.Dir.FullName -Recurse }
 }
 # remove the 99_To_Sort folder if unused
 $o = Join-Path $Root $F.Other
