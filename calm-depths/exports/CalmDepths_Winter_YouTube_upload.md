@@ -20,7 +20,7 @@ Curl up in a cozy cabin on a snowy winter night. The fire crackles softly, the t
 🎧 Best with headphones or soft speakers at low volume.
 
 🌊 More from Calm Depths:
-• Crackling Fireplace Sounds: (paste link to video 3)
+• Crackling Fireplace Sounds: https://youtu.be/NTZureQBnF8
 • Ocean Waves at Sunset: https://youtu.be/MnfkRkhJ2ok
 • Relaxing Rain Sounds: https://youtu.be/gQA23hbW5mY
 
