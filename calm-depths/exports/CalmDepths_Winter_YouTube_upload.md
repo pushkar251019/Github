@@ -27,7 +27,9 @@ Curl up in a cozy cabin on a snowy winter night. The fire crackles softly, the t
 🔔 Subscribe for new calming sounds every week.
 
 —
-Visuals and fire audio: (credit line to add once sources are confirmed)
+Video: Visual_Laurence via Pixabay (https://pixabay.com/users/visual_laurence-18402204/)
+Fire audio: King_of_the_Christmas via Pixabay
+Used under the Pixabay Content License.
 
 #christmasfireplace #cozyambience #fireplacesounds #sleepsounds #calmdepths
 
